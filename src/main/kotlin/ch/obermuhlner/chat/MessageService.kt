@@ -1,5 +1,6 @@
 package ch.obermuhlner.chat
 
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -43,7 +44,7 @@ class MessageService(
         }
 
         val messagesToSummarizeText = messagesToSummarize
-            .map{ "${it.messageType}: \n${it.text}" }
+            .map{ "${it.messageType} (${it.timestamp}): \n${it.text}" }
             .joinToString("\n")
 
         val prompt = "Summarize this information as compact and accurate as possible in less than $summaryWordCount words:\n" +
@@ -75,7 +76,7 @@ class MessageService(
         val relevantMessages = messageRetrievalService.retrieveMessages(prompt).toMutableList()
         relevantMessages.removeAll(shortTermMessages)
         val relevantMessageText = relevantMessages
-            .map{ "${it.messageType}: \n${it.text}" }
+            .map{ it.toChatString() }
             .joinToString("\n")
 
         var longTermText = ""
@@ -83,11 +84,12 @@ class MessageService(
             longTermText += longTermSummaries[k]!!.joinToString("\n")
         }
         val shortTermText = shortTermMessages
-            .map{ "${it.messageType}: \n${it.text}" }
+            .map{ it.toChatString() }
             .joinToString("\n")
 
         val context =  """
-Current date: ${LocalDateTime.now()} ${LocalDate.now().dayOfWeek}
+Current time (UTC): ${Instant.now()}
+Current local time: ${LocalDateTime.now()} ${LocalDate.now().dayOfWeek}
 
 $systemMessage
 
@@ -126,7 +128,15 @@ Assistant:
     }
 }
 
-data class Message(val messageType: MessageType, val text: String)
+data class Message(
+    val messageType: MessageType,
+    val text: String,
+    val timestamp: Instant = Instant.now(),
+) {
+    fun toChatString(): String {
+        return "$messageType ($timestamp):\n$text"
+    }
+}
 
 enum class MessageType {
     User,
