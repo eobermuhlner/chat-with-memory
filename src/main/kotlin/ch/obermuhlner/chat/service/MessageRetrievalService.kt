@@ -5,9 +5,11 @@ import dev.langchain4j.data.segment.TextSegment
 import dev.langchain4j.model.embedding.AllMiniLmL6V2EmbeddingModel
 import dev.langchain4j.store.embedding.EmbeddingSearchRequest
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore
+import org.springframework.stereotype.Service
 import java.io.File
 import java.time.Instant
 
+@Service
 class MessageRetrievalService {
 
     val METADATA_TYPE = "Type"

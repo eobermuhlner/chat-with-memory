@@ -16,6 +16,7 @@ import java.time.LocalDateTime
 class MessageService(
     private val aiService: AiService,
     private val properties: MessageServiceProperties,
+    private val messageRetrievalService: MessageRetrievalService,
     private val systemMessageRepository: SystemMessageRepository,
     private val longTermSummaryRepository: LongTermSummaryRepository,
     private val shortTermMessageRepository: ShortTermMessageRepository
@@ -23,8 +24,6 @@ class MessageService(
     private val maxMessageCount: Int = properties.maxMessageCount
     private val minMessageCount: Int = properties.minMessageCount
     private val summaryWordCount: Int = properties.summaryWordCount
-
-    private val messageRetrievalService = MessageRetrievalService()
 
     @Transactional
     fun setSystemMessage(text: String) {
@@ -67,7 +66,7 @@ class MessageService(
         }
 
         val messagesToSummarizeText = messagesToSummarize
-            .map { "${it.messageType} (${it.timestamp}): \n${it.text}" }
+            .map { "${it.messageType}: \n${it.text}" }
             .joinToString("\n")
 
         val prompt = "Summarize this information as compact and accurate as possible in less than $summaryWordCount words:\n" +
@@ -96,6 +95,7 @@ class MessageService(
             val prompt = "Summarize this information as compact and accurate as possible in less than $summaryWordCount words:\n" +
                     textToSummarize
             val nextSummary = aiService.generate(prompt)
+
             addSummary(level + 1, nextSummary)
         }
     }
@@ -122,7 +122,7 @@ class MessageService(
         } while (levelSummaries.isNotEmpty())
 
         val shortTermText = shortTermMessages
-            .map { "${it.messageType} (${it.timestamp}): \n${it.text}" }
+            .map { "${it.messageType}: \n${it.text}" }
             .joinToString("\n")
 
         val context = """
@@ -138,6 +138,7 @@ $relevantMessageText
 $longTermText
 
 $shortTermText
+
 Assistant:
         """.trimIndent()
         return context
