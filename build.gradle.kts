@@ -10,8 +10,10 @@ repositories {
 }
 
 dependencies {
-    implementation("dev.langchain4j:langchain4j-open-ai:0.31.0")
-    implementation("dev.langchain4j:langchain4j:0.31.0")
+    implementation("dev.langchain4j:langchain4j-open-ai:0.32.0")
+    implementation("dev.langchain4j:langchain4j:0.32.0")
+    implementation("dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2:0.32.0")
+    implementation("dev.langchain4j:langchain4j-easy-rag:0.32.0")
     implementation("ch.qos.logback:logback-classic:1.4.7")
     testImplementation(kotlin("test"))
 }

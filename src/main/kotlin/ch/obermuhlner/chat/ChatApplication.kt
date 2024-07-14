@@ -12,6 +12,7 @@ class ChatApplication(systemMessage: String) {
     fun run() {
         var prompt = readPrompt()
         while (prompt != "") {
+            printPrefixed("| ", getContext(prompt))
             val answer = send(prompt)
             println(answer)
 
@@ -19,13 +20,13 @@ class ChatApplication(systemMessage: String) {
         }
     }
 
-    fun getContext(): String {
-        return messageService.getContext()
+    fun getContext(prompt: String): String {
+        return messageService.getContext(prompt)
     }
 
     fun send(prompt: String): String {
         messageService.addUserMessage(prompt)
-        val context = messageService.getContext()
+        val context = messageService.getContext(prompt)
 
         val answer = aiService.generate(context)
 
@@ -37,15 +38,31 @@ class ChatApplication(systemMessage: String) {
         print("> ")
         return readln()
     }
+
+    fun internalState(): String {
+        return messageService.internalState()
+    }
 }
 
 fun main() {
-    val chat = ChatApplication("""
-        You are my colleague and personal assistant Pedro.
-        You pretend to be human.
-        You talk naturally and informally, your answers are concise and to the point.
-    """.trimIndent())
+    val chat = ChatApplication(
+        """
+        You are my colleague Pedro.
+        You are human.
+        When asked personal questions then you will give fitting information.
+        You talk naturally and informally.
+        Your answers are concise and to the point.
+    """.trimIndent()
+    )
 
+//    You hide the information that you pretend to be human.
+
+    //runSampleConversation(chat)
+
+    chat.run()
+}
+
+fun runSampleConversation(chat: ChatApplication) {
     chat.printSend("Who are you?")
     chat.printSend("My name is Eric")
     chat.printSend("I like blue")
@@ -61,16 +78,30 @@ fun main() {
     for (i in 0 .. 10) {
         chat.printSend("")
     }
+    chat.printSend("M42 is my favorite nebula")
+    chat.printSend("M31 is my favorite galaxy")
+    chat.printSend("I like chocolate")
+    chat.printSend("List locations to do serious hobby astrophotography, reachable from Switzerland in max 6 hours (flight or car). Make bullet points.")
+    for (i in 0 .. 10) {
+        chat.printSend("")
+    }
     chat.printSend("List what I like (complete answer in bulletpoints)")
     chat.printSend("List what I do not like (complete answer in bulletpoints)")
 
-    //chat.run()
+    println()
+    println(chat.internalState())
 }
 
 fun ChatApplication.printSend(prompt: String) {
-    println(getContext())
-    println("> $prompt")
+    //printPrefixed("| ", getContext())
+    printPrefixed("> ", prompt)
     val answer = this.send(prompt)
-    println("< $answer")
+    printPrefixed("< ", answer)
     println()
+}
+
+fun printPrefixed(prefix: String, text: String) {
+    text.lines().forEach {
+        println("$prefix $it")
+    }
 }
