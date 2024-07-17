@@ -6,7 +6,7 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 
 @Entity
-class SystemMessage {
+class SystemMessageEntity {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0
     var text: String = ""

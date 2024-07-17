@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import org.assertj.core.api.Assertions.assertThat
 
-class ChatControllerIntegrationTest: AbstractControllerIntegrationTest() {
+class ChatEntityControllerIntegrationTest: AbstractControllerIntegrationTest() {
 
     @Test
     fun `test chat`() {

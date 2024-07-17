@@ -3,7 +3,7 @@ package ch.obermuhlner.chat.entity
 import jakarta.persistence.*
 
 @Entity
-class LongTermSummary {
+class LongTermSummaryEntity {
     companion object {
         const val MAX_TEXT_LENGTH = 1024
     }

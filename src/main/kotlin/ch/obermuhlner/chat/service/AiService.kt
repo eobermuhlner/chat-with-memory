@@ -11,10 +11,16 @@ class AiService(
 ) {
     private val model = OpenAiChatModel.builder()
         .apiKey(apiKey)
-        .modelName(OpenAiChatModelName.GPT_3_5_TURBO)
+        //.modelName(OpenAiChatModelName.GPT_3_5_TURBO)
+        .modelName(OpenAiChatModelName.GPT_4_O)
         .build()
 
     fun generate(prompt: String): String {
+        println("=================================================================")
+        println("PROMPT:")
+        println(prompt)
+        println("TOKENS: ${model.estimateTokenCount(prompt)}")
+        println()
         return model.generate(prompt)
     }
 }
