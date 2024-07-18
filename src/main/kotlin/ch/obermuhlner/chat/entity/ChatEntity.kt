@@ -1,6 +1,7 @@
 package ch.obermuhlner.chat.entity
 
 import jakarta.persistence.CascadeType
+import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
@@ -15,6 +16,9 @@ class ChatEntity {
     var id: Long = 0
 
     var title: String = ""
+
+    @Column(length = 4000)
+    var prompt: String = ""
 
     @ManyToMany(mappedBy = "chats")
     @OrderBy("sortIndex ASC")

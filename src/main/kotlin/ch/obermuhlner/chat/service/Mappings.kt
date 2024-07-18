@@ -51,6 +51,7 @@ fun ChatEntity.toChatDetails(): ChatDetails {
     return ChatDetails(
         id = this.id,
         title = this.title,
+        prompt = this.prompt,
         assistants = this.assistants.map { it.toAssistant() }.toMutableList()
     )
 }
@@ -59,6 +60,7 @@ fun ChatDetails.toChatEntity(chatEntity: ChatEntity = ChatEntity()): ChatEntity 
     return chatEntity.apply {
         id = this@toChatEntity.id
         title = this@toChatEntity.title
+        prompt = this@toChatEntity.prompt
         // assistants are mapped in the ChatService
     }
 }

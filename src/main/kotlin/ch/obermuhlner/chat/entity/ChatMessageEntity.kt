@@ -10,7 +10,6 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.Lob
-import jakarta.persistence.ManyToMany
 import jakarta.persistence.ManyToOne
 import java.time.Instant
 
@@ -35,7 +34,4 @@ class ChatMessageEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "chat_id")
     var chat: ChatEntity? = null
-
-    @ManyToMany(mappedBy = "chatMessages")
-    val assistants: MutableSet<AssistantEntity> = mutableSetOf()
 }

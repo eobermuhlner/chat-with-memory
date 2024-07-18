@@ -31,12 +31,4 @@ class AssistantEntity {
         inverseJoinColumns = [JoinColumn(name = "chat_id")]
     )
     var chats: MutableSet<ChatEntity> = mutableSetOf()
-
-    @ManyToMany
-    @JoinTable(
-        name = "assistant_short_term_memory",
-        joinColumns = [JoinColumn(name = "assistant_id")],
-        inverseJoinColumns = [JoinColumn(name = "chatmessage_id")]
-    )
-    val chatMessages: MutableSet<ChatMessageEntity> = mutableSetOf()
 }

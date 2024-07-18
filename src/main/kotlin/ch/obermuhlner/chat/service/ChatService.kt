@@ -152,16 +152,20 @@ class ChatService(
             |Current time (UTC): $instantNow
             |Current local time: $localDateTimeNow ${localDateTimeNow.dayOfWeek}
             |
+            |## Chat
+            |${chat.prompt}
+            |
+            |## Assistant
             |${assistant.prompt}
             |If you have no relevant answer or the answer was already given, respond with $NO_ANSWER.
             |
-            |# Relevant messages
+            |## Relevant messages
             |$relevantMessagesText
             |
-            |# Memory
+            |## Memory
             |$longTermText
             |
-            |# Last Messages
+            |## Last Messages
             |$shortTermText
             |${userMessage.toShortChatString()}
         """.trimMargin()
