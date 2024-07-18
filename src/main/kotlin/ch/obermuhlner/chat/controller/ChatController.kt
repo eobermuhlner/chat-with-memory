@@ -1,39 +1,56 @@
 package ch.obermuhlner.chat.controller
 
+import ch.obermuhlner.chat.model.Assistant
+import ch.obermuhlner.chat.model.Chat
+import ch.obermuhlner.chat.model.ChatDetails
 import ch.obermuhlner.chat.model.ChatRequest
 import ch.obermuhlner.chat.model.ChatResponse
-import ch.obermuhlner.chat.service.AiService
 import ch.obermuhlner.chat.service.ChatService
-import ch.obermuhlner.chat.service.MessageService
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/chat")
+@RequestMapping("/chats")
 class ChatController(
     private val chatService: ChatService,
-    private val messageService: MessageService,
-    private val aiService: AiService,
 ) {
 
-    init {
-        messageService.setSystemMessage("""
-            You are an Assistant named Pedro.
-            You talk naturally and informally.
-            Your answers are concise and to the point.
-        """.trimIndent()
-        )
+    @GetMapping
+    fun findAll(): List<Chat> {
+        return chatService.findAll()
     }
 
-    @PostMapping("/send")
-    fun sendMessage(@RequestBody request: ChatRequest): ChatResponse {
-        return chatService.sendMessage(request.message)
-//        messageService.addUserMessage(request.message)
-//        val context = messageService.getContext(request.message)
-//        val answer = aiService.generate(context)
-//        messageService.addAssistantMessage(answer)
-//        return ChatResponse(answer)
+    @GetMapping("{id}")
+    fun findById(@PathVariable id: Long): ChatDetails? {
+        return chatService.findById(id)
     }
+
+    // FIXME move to ChatMessagesController
+    @PostMapping("/{id}/send")
+    fun sendMessage(@PathVariable id: Long, @RequestBody request: ChatRequest): ChatResponse {
+        return chatService.sendMessage(id, request.message)
+    }
+
+    @PostMapping
+    fun create(@RequestBody chat: ChatDetails): ChatDetails {
+        return chatService.create(chat)
+    }
+
+    @PutMapping("{id}")
+    fun update(@PathVariable id: Long, @RequestBody chat: ChatDetails): ChatDetails {
+        chat.id = id
+        return chatService.update(chat)
+    }
+
+    @DeleteMapping("{id}")
+    fun deleteById(@PathVariable id: Long) {
+        chatService.deleteById(id)
+    }
+
 }

@@ -12,7 +12,7 @@ import jakarta.persistence.ManyToMany
 @Entity
 class AssistantEntity {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long = 0
+    var id: Long = 0
 
     var name: String = ""
 

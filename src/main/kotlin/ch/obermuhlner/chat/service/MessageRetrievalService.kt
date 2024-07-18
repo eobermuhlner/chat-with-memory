@@ -1,6 +1,6 @@
 package ch.obermuhlner.chat.service
 
-import ch.obermuhlner.chat.model.MessageType
+import ch.obermuhlner.chat.entity.ChatMessageEntity
 import dev.langchain4j.data.document.Metadata
 import dev.langchain4j.data.segment.TextSegment
 import dev.langchain4j.model.embedding.AllMiniLmL6V2EmbeddingModel
@@ -9,16 +9,16 @@ import dev.langchain4j.store.embedding.EmbeddingSearchRequest
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore
 import org.springframework.stereotype.Service
 import java.io.File
-import java.time.Instant
 
 @Service
 class MessageRetrievalService(
     private val embeddingModel: EmbeddingModel = AllMiniLmL6V2EmbeddingModel(),
-    private val embeddingStore: InMemoryEmbeddingStore<TextSegment> = initializeEmbeddingStore()
+    private val embeddingStore: InMemoryEmbeddingStore<TextSegment> = initializeEmbeddingStore(),
 ) {
 
     companion object {
         private const val METADATA_TYPE = "Type"
+        private const val METADATA_SENDER = "Sender"
         private const val METADATA_TIMESTAMP = "Timestamp"
         private const val EMBEDDING_FILE = "./data/embeddings.json"
 
@@ -31,19 +31,20 @@ class MessageRetrievalService(
         }
     }
 
-    fun addMessage(message: Message) {
+    fun addMessage(message: ChatMessageEntity) {
         val segment = createTextSegment(message)
         val embedding = embeddingModel.embed(segment).content()
-        embeddingStore.add(embedding, segment)
+        embeddingStore.add(message.id.toString(), embedding, segment)
         saveEmbeddingStore()
     }
 
-    private fun createTextSegment(message: Message): TextSegment {
+    private fun createTextSegment(message: ChatMessageEntity): TextSegment {
         return TextSegment(
             message.text,
             Metadata(
                 mapOf(
                     METADATA_TYPE to message.messageType.name,
+                    METADATA_SENDER to (message.sender?.name ?: "User"),
                     METADATA_TIMESTAMP to message.timestamp.toString()
                 )
             )
@@ -51,25 +52,14 @@ class MessageRetrievalService(
     }
 
     private fun saveEmbeddingStore() {
-        try {
-            embeddingStore.serializeToFile(EMBEDDING_FILE)
-        } catch (e: Exception) {
-            // Handle the exception (e.g., log it)
-            println("Error saving embedding store: ${e.message}")
-        }
+        embeddingStore.serializeToFile(EMBEDDING_FILE)
     }
 
-    fun retrieveMessages(text: String): List<Message> {
+    fun retrieveMessageIds(text: String): List<Long> {
         val embedding = embeddingModel.embed(text).content()
         val request = EmbeddingSearchRequest.builder().queryEmbedding(embedding).build()
         val searchResult = embeddingStore.search(request)
 
-        return searchResult.matches().map {
-            Message(
-                MessageType.valueOf(it.embedded().metadata().getString(METADATA_TYPE)),
-                it.embedded().text(),
-                Instant.parse(it.embedded().metadata().getString(METADATA_TIMESTAMP))
-            )
-        }
+        return searchResult.matches().map { it.embeddingId().toLong() }
     }
 }

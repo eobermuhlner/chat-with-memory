@@ -9,4 +9,7 @@ interface ChatMessageRepository : JpaRepository<ChatMessageEntity, Long> {
 
     @Query("SELECT c FROM ChatMessageEntity c WHERE c.shortTermMemory = true AND c.chat = :chat order by c.timestamp")
     fun findAllShortTermMemory(chat: ChatEntity): List<ChatMessageEntity>
+
+    fun findAllByChatId(chatId: Long): List<ChatMessageEntity>
+
 }
