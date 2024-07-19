@@ -1,11 +1,11 @@
 package ch.obermuhlner.chat.controller
 
-import ch.obermuhlner.chat.model.Assistant
 import ch.obermuhlner.chat.model.Chat
 import ch.obermuhlner.chat.model.ChatDetails
 import ch.obermuhlner.chat.model.ChatRequest
 import ch.obermuhlner.chat.model.ChatResponse
 import ch.obermuhlner.chat.service.ChatService
+import ch.obermuhlner.chat.service.ChatService.Companion.NO_ANSWER
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -14,12 +14,25 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @RestController
 @RequestMapping("/chats")
 class ChatController(
     private val chatService: ChatService,
 ) {
+
+    @GetMapping("/new")
+    fun createNew(): ChatDetails {
+        val now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+        return ChatDetails(
+            id = 0,
+            title = "Chat $now",
+            prompt = "If you have no relevant answer or the answer was already given, respond with $NO_ANSWER.",
+            assistants = mutableListOf()
+        )
+    }
 
     @GetMapping
     fun findAll(): List<Chat> {
