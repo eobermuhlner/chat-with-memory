@@ -15,12 +15,14 @@ import ch.obermuhlner.chat.repository.AssistantRepository
 import ch.obermuhlner.chat.repository.ChatMessageRepository
 import ch.obermuhlner.chat.repository.ChatRepository
 import ch.obermuhlner.chat.repository.LongTermSummaryRepository
+import jakarta.persistence.EntityNotFoundException
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import kotlin.jvm.optionals.getOrNull
 
@@ -39,6 +41,16 @@ class ChatService(
     val minMessageCount = 10
     val maxMessageCount = 20
     val summaryWordCount = 50
+
+    fun createNew(): ChatDetails {
+        val now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+        return ChatDetails(
+            id = 0,
+            title = "Chat $now",
+            prompt = "If you have no relevant answer or the answer was already given, respond with $NO_ANSWER.",
+            assistants = mutableListOf()
+        )
+    }
 
     @Transactional(readOnly = true)
     fun findAll(): List<Chat> = chatRepository.findAll().map { it.toChat() }
@@ -83,6 +95,16 @@ class ChatService(
 
     @Transactional
     fun deleteById(id: Long) {
+        val chat = chatRepository.findById(id).orElseThrow { EntityNotFoundException("Chat not found: $id") }
+
+        // Clear the relationship with assistants
+        for (assistant in chat.assistants) {
+            assistant.chats.remove(chat)
+            assistantRepository.save(assistant)
+        }
+        chat.assistants.clear()
+
+        // Now delete the chat, which will cascade delete chatMessages
         chatRepository.deleteById(id)
     }
 

@@ -25,13 +25,7 @@ class ChatController(
 
     @GetMapping("/new")
     fun createNew(): ChatDetails {
-        val now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-        return ChatDetails(
-            id = 0,
-            title = "Chat $now",
-            prompt = "If you have no relevant answer or the answer was already given, respond with $NO_ANSWER.",
-            assistants = mutableListOf()
-        )
+        return chatService.createNew()
     }
 
     @GetMapping
