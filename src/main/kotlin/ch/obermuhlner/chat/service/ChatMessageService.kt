@@ -63,10 +63,17 @@ class ChatMessageService(
 
         if (transferToLongTermMemory) {
             val shortTermMessages = chatMessageRepository.findAllShortTermMemory(chat)
-            summarize(shortTermMessages)
+            summarize(chat, shortTermMessages)
         }
 
         chatMessageRepository.deleteAllByChatId(chatId)
+    }
+
+    @Transactional
+    fun deleteLongTermMessages(chatId: Long) {
+        val chat = chatRepository.findById(chatId).getOrNull() ?: throw IllegalArgumentException("Chat not found: $chatId")
+
+        longTermSummaryRepository.deleteAllByChat(chat)
     }
 
     @Transactional
@@ -129,10 +136,10 @@ class ChatMessageService(
                 message.shortTermMemory = false
             }
             chatMessageRepository.saveAll(messagesToSummarize)
-            summarize(messagesToSummarize)
+            summarize(chat, messagesToSummarize)
         }
 
-        val longTermText = buildLongTermText()
+        val longTermText = buildLongTermText(chat)
         val shortTermText = shortTermMessages.joinToString("\n") { it.toChatString() }
 
         val instantNow = Instant.now().truncatedTo(ChronoUnit.SECONDS)
@@ -159,11 +166,11 @@ class ChatMessageService(
         """.trimMargin()
     }
 
-    private fun buildLongTermText(): String {
+    private fun buildLongTermText(chat: ChatEntity): String {
         val longTermText = StringBuilder()
         var level = 0
         do {
-            val levelSummaries = longTermSummaryRepository.findByLevel(level)
+            val levelSummaries = longTermSummaryRepository.findByChatAndLevel(chat, level)
             if (levelSummaries.isNotEmpty()) {
                 longTermText.append(levelSummaries.joinToString("\n") { it.text })
             }
@@ -172,24 +179,25 @@ class ChatMessageService(
         return longTermText.toString()
     }
 
-    private fun summarize(messagesToSummarize: List<ChatMessageEntity>) {
+    private fun summarize(chatEntity: ChatEntity, messagesToSummarize: List<ChatMessageEntity>) {
         val prompt = createShortTermSummaryPrompt(messagesToSummarize)
         val summary = aiService.generate(prompt)
-        addSummary(0, summary)
+        addSummary(chatEntity, 0, summary)
     }
 
-    private fun addSummary(level: Int, summary: String) {
+    private fun addSummary(chatEntity: ChatEntity, level: Int, summary: String) {
         longTermSummaryRepository.save(LongTermSummaryEntity().apply {
             this.level = level
+            this.chat = chatEntity
             this.text = summary.take(LongTermSummaryEntity.MAX_TEXT_LENGTH)
         })
-        if (longTermSummaryRepository.findByLevel(level).size > properties.maxMessageCount) {
-            summarizeLongTerm(level)
+        if (longTermSummaryRepository.findByChatAndLevel(chatEntity, level).size > properties.maxMessageCount) {
+            summarizeLongTerm(chatEntity, level)
         }
     }
 
-    private fun summarizeLongTerm(level: Int) {
-        val levelSummaries = longTermSummaryRepository.findByLevel(level).toMutableList()
+    private fun summarizeLongTerm(chatEntity: ChatEntity, level: Int) {
+        val levelSummaries = longTermSummaryRepository.findByChatAndLevel(chatEntity, level).toMutableList()
         val messagesToSummarize = mutableListOf<LongTermSummaryEntity>()
 
         while (levelSummaries.size > properties.minMessageCount) {
@@ -197,7 +205,7 @@ class ChatMessageService(
         }
 
         val summaryText = aiService.generate(createLongTermSummaryPrompt(messagesToSummarize))
-        addSummary(level + 1, summaryText)
+        addSummary(chatEntity, level + 1, summaryText)
     }
 
     private fun LongTermSummaryRepository.deleteAndGet(messages: MutableList<LongTermSummaryEntity>): LongTermSummaryEntity {

@@ -1,12 +1,9 @@
 package ch.obermuhlner.chat.controller
 
-import ch.obermuhlner.chat.model.Chat
-import ch.obermuhlner.chat.model.ChatDetails
 import ch.obermuhlner.chat.model.ChatMessage
 import ch.obermuhlner.chat.model.ChatRequest
 import ch.obermuhlner.chat.model.ChatResponse
 import ch.obermuhlner.chat.service.ChatMessageService
-import ch.obermuhlner.chat.service.ChatService
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -45,5 +42,10 @@ class ChatMessagesController(
     @DeleteMapping("/{chatId}/messages")
     fun deleteAllMessage(@PathVariable chatId: Long, @RequestParam(defaultValue = "false") transferToLongTermMemory: Boolean) {
         return chatMessageService.deleteAllMessages(chatId, transferToLongTermMemory)
+    }
+
+    @DeleteMapping("/{chatId}/messages/long-term")
+    fun deleteLongTermMessages(@PathVariable chatId: Long) {
+        chatMessageService.deleteLongTermMessages(chatId)
     }
 }

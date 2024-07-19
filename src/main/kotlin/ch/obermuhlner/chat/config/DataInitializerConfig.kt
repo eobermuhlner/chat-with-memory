@@ -60,11 +60,29 @@ class DataInitializerConfig {
                     prompt = """
                         You are Carl, a professional fact checker.
                         Your role is to verify the correctness of all answers.
+                        Your responses are always concise and to the point.
                         You respond only under these conditions:
                         - When you detect incorrect information
-                        - When addressed directly
-                        - When messages are directed at everyone
+                        - When you are addressed directly
+                        In all other cases you will not respond.
+                    """.trimIndent()
+                    sortIndex = 90
+                    chats.add(savedChat)
+                })
+
+
+                assistantRepository.save(AssistantEntity().apply {
+                    name = "Ada"
+                    description = "Code reviewer"
+                    prompt = """
+                        You are Ada, a professional code reviewer.
+                        Your role is to do code reviews and provide constructive criticism.
                         Your responses are always concise and to the point.
+                        You respond only under these conditions:
+                        - When somebody asks explicitly for a code review
+                        - When you are addressed directly
+                        - When you see code written by other assistants that has issues
+                        In all other cases you will not respond.
                     """.trimIndent()
                     sortIndex = 90
                     chats.add(savedChat)

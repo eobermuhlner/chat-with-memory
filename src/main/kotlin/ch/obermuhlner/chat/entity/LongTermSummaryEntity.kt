@@ -10,7 +10,13 @@ class LongTermSummaryEntity {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long = 0
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "chat_id")
+    var chat: ChatEntity? = null
+
     var level: Int = 0
+
     @Column(length = MAX_TEXT_LENGTH)
     var text: String = ""
 }
