@@ -7,12 +7,13 @@ import ch.obermuhlner.chat.entity.AssistantEntity
 import ch.obermuhlner.chat.entity.ChatEntity
 import ch.obermuhlner.chat.repository.AssistantRepository
 import ch.obermuhlner.chat.repository.ChatRepository
+import ch.obermuhlner.chat.service.ChatService.Companion.NO_ANSWER
 
 @Configuration
 class DataInitializerConfig {
 
     companion object {
-        val INITIAL_CHAT_TITLE = "Chat"
+        val INITIAL_CHAT_TITLE = "Generic Chat"
     }
 
     @Bean
@@ -21,6 +22,9 @@ class DataInitializerConfig {
             if (assistantRepository.count() == 0L) {
                 val savedChat = chatRepository.save(ChatEntity().apply {
                     title = INITIAL_CHAT_TITLE
+                    prompt = """
+                        If you have no relevant answer or the answer was already given, respond with $NO_ANSWER.
+                    """.trimIndent()
                 })
 
                 assistantRepository.save(AssistantEntity().apply {

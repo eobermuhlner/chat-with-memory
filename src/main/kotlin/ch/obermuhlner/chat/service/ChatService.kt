@@ -69,9 +69,15 @@ class ChatService(
         return existingEntity.toChatDetails()
     }
 
-    private fun fillAssistants(chatEntity: ChatEntity, assistants: MutableList<Assistant>) {
+    private fun fillAssistants(chatEntity: ChatEntity, assistants: List<Assistant>) {
+        val currentAssistants = assistantRepository.findAllById(assistants.map { it.id }).toMutableSet()
+
+        // Remove assistants no longer associated with the chat
+        chatEntity.assistants.filterNot { it in currentAssistants }.forEach {
+            it.chats.remove(chatEntity)
+        }
         chatEntity.assistants.clear()
-        chatEntity.assistants.addAll(assistantRepository.findAllById(assistants.map { it.id }))
+        chatEntity.assistants.addAll(currentAssistants)
         chatEntity.assistants.forEach { it.chats.add(chatEntity) }
     }
 
@@ -88,7 +94,7 @@ class ChatService(
             return executeCommand(chat, message)
         }
 
-        val relevantMessagesText = retrieveRelevantMessagesText(message)
+        val relevantMessagesText = retrieveRelevantMessagesText(chat, message)
 
         val userMessage = ChatMessageEntity().apply {
             this.chat = chat
@@ -119,12 +125,12 @@ class ChatService(
         return ChatResponse(assistantMessages)
     }
 
-    private fun retrieveRelevantMessagesText(message: String): String {
+    private fun retrieveRelevantMessagesText(chat: ChatEntity, message: String): String {
         if (message.isBlank()) {
             return ""
         }
         val relevantMessageIds = messageRetrievalService.retrieveMessageIds(message)
-        val relevantMessages = chatMessageRepository.findAllById(relevantMessageIds)
+        val relevantMessages = chatMessageRepository.findAllByChatIdAndIdIn(chat.id, relevantMessageIds)
         return relevantMessages.joinToString("\n") { it.toChatString() }
     }
 
@@ -152,12 +158,11 @@ class ChatService(
             |Current time (UTC): $instantNow
             |Current local time: $localDateTimeNow ${localDateTimeNow.dayOfWeek}
             |
-            |## Chat
+            |## Chat: ${chat.title}
             |${chat.prompt}
             |
             |## Assistant
             |${assistant.prompt}
-            |If you have no relevant answer or the answer was already given, respond with $NO_ANSWER.
             |
             |## Relevant messages
             |$relevantMessagesText
@@ -238,11 +243,11 @@ class ChatService(
 
         val result = when (command[0]) {
             "/assistants" -> assistantRepository.findAll().joinToString("\n\n") { it.toChatString() }
-            "/messages" -> chatMessageRepository.findAll().joinToString("\n") { it.toChatString() }
+            "/messages" -> chatMessageRepository.findAllByChatId(chat.id).joinToString("\n") { it.toChatString() }
             "/count" -> chatMessageRepository.findAll().count().toString()
             "/context" -> {
                 val argumentText = lines.subList(1, lines.size).joinToString("\n")
-                val relevantMessagesText = retrieveRelevantMessagesText(argumentText)
+                val relevantMessagesText = retrieveRelevantMessagesText(chat, argumentText)
                 val userMessage = ChatMessageEntity().apply {
                     this.chat = chat
                     this.messageType = MessageType.User

@@ -12,4 +12,6 @@ interface ChatMessageRepository : JpaRepository<ChatMessageEntity, Long> {
 
     fun findAllByChatId(chatId: Long): List<ChatMessageEntity>
 
+    fun findAllByChatIdAndIdIn(chatId: Long, messageIds: Collection<Long>): List<ChatMessageEntity>
+
 }
