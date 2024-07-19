@@ -29,4 +29,11 @@ class ChatMessagesController(
     fun findById(@PathVariable chatId: Long, @PathVariable messageId: Long): ChatMessage? {
         return chatMessageService.findById(chatId, messageId)
     }
+
+    @PostMapping("/{chatId}/messages")
+    fun sendMessage(@PathVariable chatId: Long, @RequestBody request: ChatRequest): ChatResponse {
+        return chatMessageService.sendMessage(chatId, request.message)
+    }
+
+
 }

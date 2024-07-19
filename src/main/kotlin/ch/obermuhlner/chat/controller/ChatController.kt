@@ -38,12 +38,6 @@ class ChatController(
         return chatService.findById(id)
     }
 
-    // FIXME move to ChatMessagesController
-    @PostMapping("/{id}/send")
-    fun sendMessage(@PathVariable id: Long, @RequestBody request: ChatRequest): ChatResponse {
-        return chatService.sendMessage(id, request.message)
-    }
-
     @PostMapping
     fun create(@RequestBody chat: ChatDetails): ChatDetails {
         return chatService.create(chat)
