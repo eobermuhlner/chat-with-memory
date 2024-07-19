@@ -48,8 +48,30 @@ class ChatMessageService(
     }
 
     @Transactional
-    fun sendMessage(id: Long, message: String): ChatResponse {
-        val chat = chatRepository.findById(id).getOrNull() ?: throw IllegalArgumentException("Chat not found: $id")
+    fun deleteMessage(chatId: Long, messageId: Long) {
+        val chatMessageEntity = chatMessageRepository.findById(messageId).orElse(null)
+        if (chatMessageEntity.chat?.id != chatId) {
+            throw IllegalArgumentException("Message $messageId not found in chat: $chatId")
+        }
+
+        chatMessageRepository.deleteById(messageId)
+    }
+
+    @Transactional
+    fun deleteAllMessages(chatId: Long, transferToLongTermMemory: Boolean) {
+        val chat = chatRepository.findById(chatId).getOrNull() ?: throw IllegalArgumentException("Chat not found: $chatId")
+
+        if (transferToLongTermMemory) {
+            val shortTermMessages = chatMessageRepository.findAllShortTermMemory(chat)
+            summarize(shortTermMessages)
+        }
+
+        chatMessageRepository.deleteAllByChatId(chatId)
+    }
+
+    @Transactional
+    fun sendMessage(chatId: Long, message: String): ChatResponse {
+        val chat = chatRepository.findById(chatId).getOrNull() ?: throw IllegalArgumentException("Chat not found: $chatId")
 
         if (message.startsWith("/")) {
             return executeCommand(chat, message)

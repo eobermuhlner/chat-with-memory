@@ -7,11 +7,13 @@ import ch.obermuhlner.chat.model.ChatRequest
 import ch.obermuhlner.chat.model.ChatResponse
 import ch.obermuhlner.chat.service.ChatMessageService
 import ch.obermuhlner.chat.service.ChatService
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
@@ -35,5 +37,13 @@ class ChatMessagesController(
         return chatMessageService.sendMessage(chatId, request.message)
     }
 
+    @DeleteMapping("/{chatId}/messages/{messageId}")
+    fun deleteMessage(@PathVariable chatId: Long, @PathVariable messageId: Long) {
+        return chatMessageService.deleteMessage(chatId, messageId)
+    }
 
+    @DeleteMapping("/{chatId}/messages")
+    fun deleteAllMessage(@PathVariable chatId: Long, @RequestParam(defaultValue = "false") transferToLongTermMemory: Boolean) {
+        return chatMessageService.deleteAllMessages(chatId, transferToLongTermMemory)
+    }
 }

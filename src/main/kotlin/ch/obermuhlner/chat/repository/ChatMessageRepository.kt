@@ -18,4 +18,6 @@ interface ChatMessageRepository : JpaRepository<ChatMessageEntity, Long> {
     fun findAllBySender(sender: AssistantEntity): List<ChatMessageEntity>
 
     fun deleteAllBySender(sender: AssistantEntity): Int
+
+    fun deleteAllByChatId(chatId: Long): Int
 }
