@@ -41,13 +41,17 @@ class AssistantService(
     }
 
     @Transactional
-    fun deleteById(id: Long) {
+    fun deleteById(id: Long, deleteMessage: Boolean) {
         val assistant = assistantRepository.findById(id).orElseThrow { EntityNotFoundException("Assistant not found: $id") }
 
-        val chatMessages = chatMessageRepository.findAllBySender(assistant)
-        for (chatMessage in chatMessages) {
-            chatMessage.sender = null
-            chatMessageRepository.save(chatMessage)
+        if (deleteMessage) {
+            chatMessageRepository.deleteAllBySender(assistant)
+        } else {
+            val chatMessages = chatMessageRepository.findAllBySender(assistant)
+            for (chatMessage in chatMessages) {
+                chatMessage.sender = null
+                chatMessageRepository.save(chatMessage)
+            }
         }
 
         for (chat in assistant.chats) {
