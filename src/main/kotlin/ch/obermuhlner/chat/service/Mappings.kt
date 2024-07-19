@@ -7,25 +7,26 @@ import ch.obermuhlner.chat.model.Assistant
 import ch.obermuhlner.chat.model.Chat
 import ch.obermuhlner.chat.model.ChatDetails
 import ch.obermuhlner.chat.model.ChatMessage
+import ch.obermuhlner.chat.model.MessageType
 import java.time.temporal.ChronoUnit
 
 fun AssistantEntity.toChatString(): String {
     return """
-            |# ${name} - ${description} 
+            |### ${name} - ${description} 
             |${prompt}
         """.trimMargin()
 }
 
 fun ChatMessageEntity.toChatString(): String {
     return """
-            |${sender?.name ?: "User"} (${timestamp.truncatedTo(ChronoUnit.SECONDS)}):
+            |### ${sender?.name ?: "User"} (${timestamp.truncatedTo(ChronoUnit.SECONDS)}):
             |${text}
         """.trimMargin()
 }
 
 fun ChatMessageEntity.toShortChatString(): String {
     return """
-            |${this.sender?.name ?: "User"}:
+            |${this.sender?.name ?: (if (messageType == MessageType.User) "User" else "_Deleted_")}:
             |${this.text}
         """.trimMargin()
 }
@@ -34,7 +35,7 @@ fun ChatMessageEntity.toChatMessage(): ChatMessage {
     return ChatMessage(
         id = this.id,
         type = this.messageType,
-        sender = this.sender?.name,
+        sender = this.sender?.name ?: (if (messageType == MessageType.User) "User" else "_Deleted_"),
         text = this.text,
         timestamp = this.timestamp
     )

@@ -1,5 +1,6 @@
 package ch.obermuhlner.chat.repository
 
+import ch.obermuhlner.chat.entity.AssistantEntity
 import ch.obermuhlner.chat.entity.ChatEntity
 import ch.obermuhlner.chat.entity.ChatMessageEntity
 import org.springframework.data.jpa.repository.JpaRepository
@@ -14,4 +15,5 @@ interface ChatMessageRepository : JpaRepository<ChatMessageEntity, Long> {
 
     fun findAllByChatIdAndIdIn(chatId: Long, messageIds: Collection<Long>): List<ChatMessageEntity>
 
+    fun findAllBySender(sender: AssistantEntity): List<ChatMessageEntity>
 }

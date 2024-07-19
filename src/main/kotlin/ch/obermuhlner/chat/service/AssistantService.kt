@@ -2,6 +2,9 @@ package ch.obermuhlner.chat.service
 
 import ch.obermuhlner.chat.model.Assistant
 import ch.obermuhlner.chat.repository.AssistantRepository
+import ch.obermuhlner.chat.repository.ChatMessageRepository
+import ch.obermuhlner.chat.repository.ChatRepository
+import jakarta.persistence.EntityNotFoundException
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -9,7 +12,9 @@ import kotlin.jvm.optionals.getOrNull
 
 @Service
 class AssistantService(
-    private val assistantRepository: AssistantRepository
+    private val assistantRepository: AssistantRepository,
+    private val chatRepository: ChatRepository,
+    private val chatMessageRepository: ChatMessageRepository,
 ) {
 
     @Transactional(readOnly = true)
@@ -37,6 +42,20 @@ class AssistantService(
 
     @Transactional
     fun deleteById(id: Long) {
+        val assistant = assistantRepository.findById(id).orElseThrow { EntityNotFoundException("Assistant not found: $id") }
+
+        val chatMessages = chatMessageRepository.findAllBySender(assistant)
+        for (chatMessage in chatMessages) {
+            chatMessage.sender = null
+            chatMessageRepository.save(chatMessage)
+        }
+
+        for (chat in assistant.chats) {
+            chat.assistants.remove(assistant)
+            chatRepository.save(chat)
+        }
+        assistant.chats.clear()
+
         assistantRepository.deleteById(id)
     }
 }
