@@ -28,11 +28,8 @@ class ChatMessageService(
     private val messageRetrievalService: MessageRetrievalService,
     private val aiService: AiService,
     private val longTermSummaryRepository: LongTermSummaryRepository,
+    private val properties: ChatMessageServiceProperties,
 ) {
-
-    val minMessageCount = 10
-    val maxMessageCount = 20
-    val summaryWordCount = 50
 
     @Transactional(readOnly = true)
     fun findAllMessages(chatId: Long): List<ChatMessage> {
@@ -102,9 +99,9 @@ class ChatMessageService(
         var shortTermMessages = chatMessageRepository.findAllShortTermMemory(chat)
 
         val shortTermCount = shortTermMessages.count()
-        if (shortTermCount > maxMessageCount) {
-            val messagesToSummarize = shortTermMessages.subList(0, shortTermCount - minMessageCount)
-            shortTermMessages = shortTermMessages.subList(minMessageCount, shortTermMessages.size)
+        if (shortTermCount > properties.maxMessageCount) {
+            val messagesToSummarize = shortTermMessages.subList(0, shortTermCount - properties.minMessageCount)
+            shortTermMessages = shortTermMessages.subList(properties.minMessageCount, shortTermMessages.size)
 
             messagesToSummarize.forEach { message ->
                 message.shortTermMemory = false
@@ -164,7 +161,7 @@ class ChatMessageService(
             this.level = level
             this.text = summary.take(LongTermSummaryEntity.MAX_TEXT_LENGTH)
         })
-        if (longTermSummaryRepository.findByLevel(level).size > maxMessageCount) {
+        if (longTermSummaryRepository.findByLevel(level).size > properties.maxMessageCount) {
             summarizeLongTerm(level)
         }
     }
@@ -173,7 +170,7 @@ class ChatMessageService(
         val levelSummaries = longTermSummaryRepository.findByLevel(level).toMutableList()
         val messagesToSummarize = mutableListOf<LongTermSummaryEntity>()
 
-        while (levelSummaries.size > minMessageCount) {
+        while (levelSummaries.size > properties.minMessageCount) {
             messagesToSummarize.add(longTermSummaryRepository.deleteAndGet(levelSummaries))
         }
 
@@ -198,7 +195,7 @@ class ChatMessageService(
     }
 
     private fun createSummaryPrompt(messagesText: String): String {
-        return "Summarize this information as compact and accurate as possible in less than $summaryWordCount words:\n$messagesText"
+        return "Summarize this information as compact and accurate as possible in less than ${properties.summaryWordCount} words:\n$messagesText"
     }
 
     private fun executeCommand(chat: ChatEntity, message: String): ChatResponse {
