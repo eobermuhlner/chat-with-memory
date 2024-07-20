@@ -40,7 +40,7 @@ class ChatMessagesController(
     }
 
     @DeleteMapping("/{chatId}/messages")
-    fun deleteAllMessage(@PathVariable chatId: Long, @RequestParam(defaultValue = "false") transferToLongTermMemory: Boolean) {
+    fun deleteAllMessages(@PathVariable chatId: Long, @RequestParam(name = "transferToLongTermMemory", defaultValue = "true") transferToLongTermMemory: Boolean) {
         return chatMessageService.deleteAllMessages(chatId, transferToLongTermMemory)
     }
 

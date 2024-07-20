@@ -32,47 +32,37 @@ class ChatMessageService(
 ) {
 
     @Transactional(readOnly = true)
-    fun findAllMessages(chatId: Long): List<ChatMessage> {
-        return chatMessageRepository.findAllByChatId(chatId)
-            .map { it.toChatMessage() }
-    }
+    fun findAllMessages(chatId: Long): List<ChatMessage> =
+        chatMessageRepository.findAllByChatId(chatId).map { it.toChatMessage() }
 
     @Transactional(readOnly = true)
     fun findById(chatId: Long, messageId: Long): ChatMessage? {
         val chatMessageEntity = chatMessageRepository.findById(messageId).orElse(null) ?: return null
-        if (chatMessageEntity.chat?.id != chatId) {
-            return null
-        }
-
-        return chatMessageEntity.toChatMessage()
+        return if (chatMessageEntity.chat?.id == chatId) chatMessageEntity.toChatMessage() else null
     }
 
     @Transactional
     fun deleteMessage(chatId: Long, messageId: Long) {
         val chatMessageEntity = chatMessageRepository.findById(messageId).orElse(null)
-        if (chatMessageEntity.chat?.id != chatId) {
+        if (chatMessageEntity?.chat?.id != chatId) {
             throw IllegalArgumentException("Message $messageId not found in chat: $chatId")
         }
-
         chatMessageRepository.deleteById(messageId)
     }
 
     @Transactional
     fun deleteAllMessages(chatId: Long, transferToLongTermMemory: Boolean) {
         val chat = chatRepository.findById(chatId).getOrNull() ?: throw IllegalArgumentException("Chat not found: $chatId")
-
         if (transferToLongTermMemory) {
             val shortTermMessages = chatMessageRepository.findAllShortTermMemory(chat)
             summarize(chat, shortTermMessages)
         }
-
         chatMessageRepository.deleteAllByChatId(chatId)
     }
 
     @Transactional
     fun deleteLongTermMessages(chatId: Long) {
         val chat = chatRepository.findById(chatId).getOrNull() ?: throw IllegalArgumentException("Chat not found: $chatId")
-
         longTermSummaryRepository.deleteAllByChat(chat)
     }
 
@@ -80,12 +70,9 @@ class ChatMessageService(
     fun sendMessage(chatId: Long, message: String): ChatResponse {
         val chat = chatRepository.findById(chatId).getOrNull() ?: throw IllegalArgumentException("Chat not found: $chatId")
 
-        if (message.startsWith("/")) {
-            return executeCommand(chat, message)
-        }
+        if (message.startsWith("/")) return executeCommand(chat, message)
 
         val relevantMessagesText = retrieveRelevantMessagesText(chat, message)
-
         val userMessage = ChatMessageEntity().apply {
             this.chat = chat
             this.messageType = MessageType.User
@@ -94,9 +81,7 @@ class ChatMessageService(
         val savedUserMessageEntity = chatMessageRepository.save(userMessage)
         messageRetrievalService.addMessage(savedUserMessageEntity)
 
-        val assistantMessages = mutableListOf<ChatMessage>()
-
-        for (assistant in chat.assistants) {
+        val assistantMessages = chat.assistants.mapNotNull { assistant ->
             val context = createContext(chat, assistant, userMessage, relevantMessagesText)
             val answer = aiService.generate(context)
             if (answer.isNotBlank() && !answer.startsWith(NO_ANSWER)) {
@@ -108,17 +93,15 @@ class ChatMessageService(
                 }
                 val savedAssistantMessageEntity = chatMessageRepository.save(assistantMessage)
                 messageRetrievalService.addMessage(savedAssistantMessageEntity)
-                assistantMessages.add(assistantMessage.toChatMessage())
-            }
+                assistantMessage.toChatMessage()
+            } else null
         }
 
         return ChatResponse(assistantMessages)
     }
 
     private fun retrieveRelevantMessagesText(chat: ChatEntity, message: String): String {
-        if (message.isBlank()) {
-            return ""
-        }
+        if (message.isBlank()) return ""
         val relevantMessageIds = messageRetrievalService.retrieveMessageIds(message)
         val relevantMessages = chatMessageRepository.findAllByChatIdAndIdIn(chat.id, relevantMessageIds)
         return relevantMessages.joinToString("\n") { it.toChatString() }
@@ -126,24 +109,20 @@ class ChatMessageService(
 
     private fun createContext(chat: ChatEntity, assistant: AssistantEntity, userMessage: ChatMessageEntity, relevantMessagesText: String): String {
         var shortTermMessages = chatMessageRepository.findAllShortTermMemory(chat)
-
         val shortTermCount = shortTermMessages.count()
         if (shortTermCount > properties.maxMessageCount) {
             val messagesToSummarize = shortTermMessages.subList(0, shortTermCount - properties.minMessageCount)
             shortTermMessages = shortTermMessages.subList(properties.minMessageCount, shortTermMessages.size)
-
-            messagesToSummarize.forEach { message ->
-                message.shortTermMemory = false
-            }
+            messagesToSummarize.forEach { it.shortTermMemory = false }
             chatMessageRepository.saveAll(messagesToSummarize)
             summarize(chat, messagesToSummarize)
         }
 
         val longTermText = buildLongTermText(chat)
         val shortTermText = shortTermMessages.joinToString("\n") { it.toChatString() }
-
         val instantNow = Instant.now().truncatedTo(ChronoUnit.SECONDS)
         val localDateTimeNow = LocalDateTime.ofInstant(instantNow, ZoneId.systemDefault())
+
         return """
             |Current time (UTC): $instantNow
             |Current local time: $localDateTimeNow ${localDateTimeNow.dayOfWeek}
@@ -166,21 +145,20 @@ class ChatMessageService(
         """.trimMargin()
     }
 
-    private fun buildLongTermText(chat: ChatEntity): String {
-        val longTermText = StringBuilder()
-        var level = 0
-        do {
-            val levelSummaries = longTermSummaryRepository.findByChatAndLevel(chat, level)
-            if (levelSummaries.isNotEmpty()) {
-                longTermText.append(levelSummaries.joinToString("\n") { it.text })
-            }
-            level++
-        } while (levelSummaries.isNotEmpty())
-        return longTermText.toString()
-    }
+    private fun buildLongTermText(chat: ChatEntity): String =
+        StringBuilder().apply {
+            var level = 0
+            do {
+                val levelSummaries = longTermSummaryRepository.findByChatAndLevel(chat, level)
+                if (levelSummaries.isNotEmpty()) {
+                    append(levelSummaries.joinToString("\n") { it.text })
+                }
+                level++
+            } while (levelSummaries.isNotEmpty())
+        }.toString()
 
     private fun summarize(chatEntity: ChatEntity, messagesToSummarize: List<ChatMessageEntity>) {
-        val prompt = createShortTermSummaryPrompt(messagesToSummarize)
+        val prompt = createSummaryPrompt(messagesToSummarize.joinToString("\n") { it.toChatString() })
         val summary = aiService.generate(prompt)
         addSummary(chatEntity, 0, summary)
     }
@@ -199,12 +177,10 @@ class ChatMessageService(
     private fun summarizeLongTerm(chatEntity: ChatEntity, level: Int) {
         val levelSummaries = longTermSummaryRepository.findByChatAndLevel(chatEntity, level).toMutableList()
         val messagesToSummarize = mutableListOf<LongTermSummaryEntity>()
-
         while (levelSummaries.size > properties.minMessageCount) {
             messagesToSummarize.add(longTermSummaryRepository.deleteAndGet(levelSummaries))
         }
-
-        val summaryText = aiService.generate(createLongTermSummaryPrompt(messagesToSummarize))
+        val summaryText = aiService.generate(createSummaryPrompt(messagesToSummarize.joinToString("\n") { it.text }))
         addSummary(chatEntity, level + 1, summaryText)
     }
 
@@ -214,19 +190,10 @@ class ChatMessageService(
         return toDelete
     }
 
-    private fun createShortTermSummaryPrompt(messages: List<ChatMessageEntity>): String {
-        val messagesText = messages.joinToString("\n") { it.toChatString() }
-        return createSummaryPrompt(messagesText)
-    }
-
-    private fun createLongTermSummaryPrompt(messages: List<LongTermSummaryEntity>): String {
-        val messagesText = messages.joinToString("\n") { it.text }
-        return createSummaryPrompt(messagesText)
-    }
-
-    private fun createSummaryPrompt(messagesText: String): String {
-        return "Summarize this information as compact and accurate as possible in less than ${properties.summaryWordCount} words:\n$messagesText"
-    }
+    private fun createSummaryPrompt(messagesText: String): String = """
+            |Summarize this information as compact and accurate as possible in less than ${properties.summaryWordCount} words:
+            |$messagesText
+        """.trimMargin()
 
     private fun executeCommand(chat: ChatEntity, message: String): ChatResponse {
         val lines = message.lines()
@@ -244,28 +211,29 @@ class ChatMessageService(
                     this.messageType = MessageType.User
                     this.text = argumentText
                 }
-                createContext(chat, chat.assistants.first(), userMessage, relevantMessagesText)
+                createContext(chat, chat.assistants.firstOrNull() ?: AssistantEntity(), userMessage, relevantMessagesText)
             }
-            "/help" -> {
-                """
-                    Commands:
-                    - /assistants
-                    - /messages
-                    - /count
-                    - /context
-                    - /help
-                """.trimIndent()
-            }
-            else -> "Unknown command: $command[0]"
+            "/help" -> """
+                Commands:
+                - /assistants
+                - /messages
+                - /count
+                - /context
+                - /help
+            """.trimIndent()
+            else -> "Unknown command: ${command[0]}"
         }
 
-        return ChatResponse(listOf(
-            ChatMessage(
-                id = -1,
-                type = MessageType.System,
-                sender = "System",
-                text = result,
-                timestamp = Instant.now()
-            )))
+        return ChatResponse(
+            listOf(
+                ChatMessage(
+                    id = -1,
+                    type = MessageType.System,
+                    sender = "System",
+                    text = result,
+                    timestamp = Instant.now()
+                )
+            )
+        )
     }
 }
