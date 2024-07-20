@@ -26,7 +26,7 @@ fun ChatMessageEntity.toChatString(): String {
 
 fun ChatMessageEntity.toShortChatString(): String {
     return """
-            |${this.sender?.name ?: (if (messageType == MessageType.User) "User" else "_Deleted_")}:
+            |### ${this.sender?.name ?: (if (messageType == MessageType.User) "User" else "Deleted")}:
             |${this.text}
         """.trimMargin()
 }
@@ -35,7 +35,7 @@ fun ChatMessageEntity.toChatMessage(): ChatMessage {
     return ChatMessage(
         id = this.id,
         type = this.messageType,
-        sender = this.sender?.name ?: (if (messageType == MessageType.User) "User" else "_Deleted_"),
+        sender = this.sender?.name ?: (if (messageType == MessageType.User) "User" else "Deleted"),
         text = this.text,
         timestamp = this.timestamp
     )

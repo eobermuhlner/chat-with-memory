@@ -34,6 +34,11 @@ class ChatMessagesController(
         return chatMessageService.sendMessage(chatId, request.message)
     }
 
+    @PostMapping("/{chatId}/messages/transfer-to-long-term")
+    fun transferShortTermMessagesToLongTerm(@PathVariable chatId: Long) {
+        chatMessageService.transferShortTermMessagesToLongTerm(chatId)
+    }
+
     @DeleteMapping("/{chatId}/messages/{messageId}")
     fun deleteMessage(@PathVariable chatId: Long, @PathVariable messageId: Long) {
         return chatMessageService.deleteMessage(chatId, messageId)

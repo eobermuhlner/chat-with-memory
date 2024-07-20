@@ -42,6 +42,15 @@ class ChatMessageService(
     }
 
     @Transactional
+    fun transferShortTermMessagesToLongTerm(chatId: Long) {
+        val chat = chatRepository.findById(chatId).getOrNull() ?: throw IllegalArgumentException("Chat not found: $chatId")
+        val shortTermMessages = chatMessageRepository.findAllShortTermMemory(chat)
+        shortTermMessages.forEach { it.shortTermMemory = false }
+        chatMessageRepository.saveAll(shortTermMessages)
+        summarize(chat, shortTermMessages)
+    }
+
+    @Transactional
     fun deleteMessage(chatId: Long, messageId: Long) {
         val chatMessageEntity = chatMessageRepository.findById(messageId).orElse(null)
         if (chatMessageEntity?.chat?.id != chatId) {
@@ -142,6 +151,7 @@ class ChatMessageService(
             |
             |## Last Messages
             |$shortTermText
+            |
             |${userMessage.toShortChatString()}
         """.trimMargin()
     }
@@ -192,7 +202,7 @@ class ChatMessageService(
     }
 
     private fun createSummaryPrompt(messagesText: String): String = """
-            |Summarize this information as compact and accurate as possible in less than ${properties.summaryWordCount} words:
+            |Summarize this information in bulletpoints as compact and accurate as possible using less than ${properties.summaryWordCount} words:
             |$messagesText
         """.trimMargin()
 
