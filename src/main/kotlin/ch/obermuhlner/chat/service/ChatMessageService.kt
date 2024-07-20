@@ -102,9 +102,10 @@ class ChatMessageService(
 
     private fun retrieveRelevantMessagesText(chat: ChatEntity, message: String): String {
         if (message.isBlank()) return ""
-        val relevantMessageIds = messageRetrievalService.retrieveMessageIds(message)
+        val relevantMessageIds = messageRetrievalService.retrieveMessageIds(message, properties.relevantMessagesMaxResult)
         val relevantMessages = chatMessageRepository.findAllByChatIdAndIdIn(chat.id, relevantMessageIds)
-        return relevantMessages.joinToString("\n") { it.toChatString() }
+        val longTermMessages = relevantMessages.filter { !it.shortTermMemory }
+        return longTermMessages.joinToString("\n") { it.toChatString() }
     }
 
     private fun createContext(chat: ChatEntity, assistant: AssistantEntity, userMessage: ChatMessageEntity, relevantMessagesText: String): String {

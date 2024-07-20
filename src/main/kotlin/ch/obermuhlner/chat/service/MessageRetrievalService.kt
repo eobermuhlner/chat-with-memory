@@ -55,9 +55,9 @@ class MessageRetrievalService(
         embeddingStore.serializeToFile(EMBEDDING_FILE)
     }
 
-    fun retrieveMessageIds(text: String): List<Long> {
+    fun retrieveMessageIds(text: String, maxResults: Int): List<Long> {
         val embedding = embeddingModel.embed(text).content()
-        val request = EmbeddingSearchRequest.builder().queryEmbedding(embedding).build()
+        val request = EmbeddingSearchRequest.builder().queryEmbedding(embedding).maxResults(maxResults).build()
         val searchResult = embeddingStore.search(request)
 
         return searchResult.matches().map { it.embeddingId().toLong() }

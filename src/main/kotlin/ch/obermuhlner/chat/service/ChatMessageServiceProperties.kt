@@ -6,5 +6,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 class ChatMessageServiceProperties(
     var maxMessageCount: Int = 10,
     var minMessageCount: Int = 5,
-    var summaryWordCount: Int = 50
+    var summaryWordCount: Int = 50,
+    var relevantMessagesMaxResult: Int = 5,
 )
