@@ -25,10 +25,16 @@ dependencies {
     implementation("dev.langchain4j:langchain4j:0.32.0")
     implementation("dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2:0.32.0")
     implementation("dev.langchain4j:langchain4j-easy-rag:0.32.0")
+    implementation("org.jsoup:jsoup:1.15.4")
+    implementation("org.slf4j:slf4j-api:2.0.13")
     implementation("ch.qos.logback:logback-classic:1.4.7")
+    implementation("org.apache.logging.log4j:log4j-to-slf4j:2.20.0")
+    implementation("org.slf4j:jcl-over-slf4j:2.0.7")
+    implementation("org.slf4j:jul-to-slf4j:2.0.7")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation(kotlin("test"))
 }
+
 
 tasks.test {
     useJUnitPlatform()

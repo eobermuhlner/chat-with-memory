@@ -8,6 +8,7 @@ import ch.obermuhlner.chat.model.Chat
 import ch.obermuhlner.chat.model.ChatDetails
 import ch.obermuhlner.chat.model.ChatMessage
 import ch.obermuhlner.chat.model.MessageType
+import ch.obermuhlner.chat.model.Tool
 import java.time.temporal.ChronoUnit
 
 fun AssistantEntity.toChatString(): String {
@@ -53,7 +54,8 @@ fun ChatEntity.toChatDetails(): ChatDetails {
         id = this.id,
         title = this.title,
         prompt = this.prompt,
-        assistants = this.assistants.map { it.toAssistant() }.toMutableList()
+        assistants = this.assistants.map { it.toAssistant() }.toMutableList(),
+        tools = this.tools.map { it.name }
     )
 }
 
@@ -62,6 +64,13 @@ fun ChatDetails.toChatEntity(chatEntity: ChatEntity = ChatEntity()): ChatEntity 
         id = this@toChatEntity.id
         title = this@toChatEntity.title
         prompt = this@toChatEntity.prompt
+        tools = this@toChatEntity.tools.mapNotNull {
+            try {
+                Tool.valueOf(it)
+            } catch (ex: Exception) {
+                null
+            }
+        }
         // assistants are mapped in the ChatService
     }
 }
@@ -72,7 +81,8 @@ fun AssistantEntity.toAssistant(): Assistant {
         name = this.name,
         description = this.description,
         prompt = this.prompt,
-        sortIndex = this.sortIndex
+        sortIndex = this.sortIndex,
+        tools = this.tools.map { it.name }
     )
 }
 
@@ -83,5 +93,12 @@ fun Assistant.toAssistantEntity(assistantEntity: AssistantEntity = AssistantEnti
         description = this@toAssistantEntity.description
         prompt = this@toAssistantEntity.prompt
         sortIndex = this@toAssistantEntity.sortIndex
+        tools = this@toAssistantEntity.tools.mapNotNull {
+            try {
+                Tool.valueOf(it)
+            } catch (ex: Exception) {
+                null
+            }
+        }
     }
 }

@@ -1,7 +1,9 @@
 package ch.obermuhlner.chat.entity
 
+import ch.obermuhlner.chat.model.Tool
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
+import jakarta.persistence.Convert
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
@@ -27,4 +29,9 @@ class ChatEntity {
     @OneToMany(mappedBy = "chat", cascade = [CascadeType.ALL], orphanRemoval = true)
     @OrderBy("timestamp ASC")
     val chatMessages: MutableList<ChatMessageEntity> = mutableListOf()
+
+    @Column(name = "tools")
+    @Convert(converter = ToolListConverter::class)
+    var tools: List<Tool> = mutableListOf()
+
 }

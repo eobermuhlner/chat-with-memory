@@ -1,6 +1,8 @@
 package ch.obermuhlner.chat.entity
 
+import ch.obermuhlner.chat.model.Tool
 import jakarta.persistence.Column
+import jakarta.persistence.Convert
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
@@ -31,4 +33,8 @@ class AssistantEntity {
         inverseJoinColumns = [JoinColumn(name = "chat_id")]
     )
     var chats: MutableSet<ChatEntity> = mutableSetOf()
+
+    @Column(name = "tools")
+    @Convert(converter = ToolListConverter::class)
+    var tools: List<Tool> = mutableListOf()
 }

@@ -92,7 +92,9 @@ class ChatMessageService(
 
         val assistantMessages = chat.assistants.mapNotNull { assistant ->
             val context = createContext(chat, assistant, userMessage, relevantMessagesText)
-            val answer = aiService.generate(context)
+            val tools = chat.tools.toMutableSet()
+            tools.addAll(assistant.tools)
+            val answer = aiService.generateWithTools(context, tools)
             if (answer.isNotBlank() && !answer.startsWith(NO_ANSWER)) {
                 val assistantMessage = ChatMessageEntity().apply {
                     this.chat = chat

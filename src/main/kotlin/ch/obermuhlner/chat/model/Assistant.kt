@@ -6,4 +6,5 @@ data class Assistant(
     var description: String,
     var prompt: String,
     var sortIndex: Int,
+    var tools: List<String> = mutableListOf(),
 )
