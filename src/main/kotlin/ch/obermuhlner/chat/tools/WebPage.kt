@@ -27,14 +27,14 @@ class WebPage {
             val contentType = response.header("Content-Type")
             val content = response.body?.string()
             val extractedContent = when {
-                contentType == null || content == null -> "No content available"
+                contentType == null || content.isNullOrBlank() -> "No content available"
                 contentType.contains("text/html") -> extractHtmlTextContent(content)
                 contentType.contains("application/json") -> content
                 contentType.contains("text/plain") -> content
                 else -> "Unsupported content type: $contentType"
             }
             logger.info("Extracted webpage content: ${extractedContent.length} characters (original content: ${content?.length} characters")
-            return extractedContent
+            return extractedContent.ifBlank { "No content available" }
         } else {
             return "Request failed: ${response.code}"
         }
