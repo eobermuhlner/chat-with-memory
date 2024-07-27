@@ -44,8 +44,8 @@ class ChatService(
 
     @Transactional
     fun create(chat: ChatDetails): ChatDetails {
-        if (chat.id != 0L) {
-            throw IllegalArgumentException("Cannot create chat with id 0")
+        if (chat.id != null) {
+            throw IllegalArgumentException("Cannot create chat with id")
         }
         val chatEntity = chat.toChatEntity()
         fillAssistants(chatEntity, chat.assistants)

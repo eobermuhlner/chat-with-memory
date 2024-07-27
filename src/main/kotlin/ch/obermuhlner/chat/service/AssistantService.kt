@@ -29,8 +29,8 @@ class AssistantService(
 
     @Transactional
     fun create(assistant: Assistant): Assistant {
-        if (assistant.id != 0L) {
-            throw IllegalArgumentException("Cannot create assistant with id 0")
+        if (assistant.id != null) {
+            throw IllegalArgumentException("Cannot create assistant with id")
         }
         val assistantEntity = assistant.toAssistantEntity()
         fillDocuments(assistantEntity, assistant.documents)

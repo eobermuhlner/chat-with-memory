@@ -6,5 +6,5 @@ data class ChatDetails(
     var prompt: String,
     val assistants: MutableList<Assistant>,
     val tools: List<String> = mutableListOf(),
-    var documents: List<Document> = mutableListOf(),
+    val documents: List<Document> = mutableListOf(),
 )
