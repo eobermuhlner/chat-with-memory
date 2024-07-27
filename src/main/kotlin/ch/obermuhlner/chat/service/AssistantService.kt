@@ -41,7 +41,7 @@ class AssistantService(
 
     @Transactional
     fun update(assistant: Assistant): Assistant {
-        val existingEntity = assistantRepository.findById(assistant.id).getOrNull() ?: throw IllegalArgumentException("Assistant not found: ${assistant.id}")
+        val existingEntity = assistantRepository.findById(assistant.id!!).getOrNull() ?: throw IllegalArgumentException("Assistant not found: ${assistant.id}")
         assistant.toAssistantEntity(existingEntity)
 
         fillDocuments(existingEntity, assistant.documents)

@@ -1,7 +1,7 @@
 package ch.obermuhlner.chat.model
 
 data class ChatDetails(
-    var id: Long,
+    var id: Long?,
     var title: String,
     var prompt: String,
     val assistants: MutableList<Assistant>,

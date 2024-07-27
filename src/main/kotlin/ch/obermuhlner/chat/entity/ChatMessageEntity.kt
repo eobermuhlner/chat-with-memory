@@ -16,7 +16,7 @@ import java.time.Instant
 @Entity
 class ChatMessageEntity {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long = 0
+    var id: Long? = null
 
     @Enumerated(EnumType.STRING)
     var messageType: MessageType = MessageType.User

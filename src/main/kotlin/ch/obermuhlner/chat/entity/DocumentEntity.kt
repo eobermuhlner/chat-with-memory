@@ -11,7 +11,7 @@ import jakarta.persistence.ManyToMany
 class DocumentEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long = 0
+    var id: Long? = null
 
     var name: String = ""
 

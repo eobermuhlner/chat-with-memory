@@ -40,7 +40,7 @@ class DocumentRetrievalService(
         val parser = ApacheTikaDocumentParserFactory().create()
         val document = parser.parse(ByteArrayInputStream(documentEntity.data))
         document.metadata().put(METADATA_FILENAME, documentEntity.name)
-        document.metadata().put(METADATA_ID, documentEntity.id)
+        document.metadata().put(METADATA_ID, documentEntity.id!!)
         addDocument(document, splitterStrategy)
     }
 

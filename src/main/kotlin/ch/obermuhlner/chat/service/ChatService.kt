@@ -29,7 +29,7 @@ class ChatService(
     fun createNew(): ChatDetails {
         val now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
         return ChatDetails(
-            id = 0,
+            id = null,
             title = "Chat $now",
             prompt = "If you have no relevant answer or the answer was already given, respond with $NO_ANSWER.",
             assistants = mutableListOf()
@@ -57,7 +57,7 @@ class ChatService(
 
     @Transactional
     fun update(chat: ChatDetails): ChatDetails {
-        val existingEntity = chatRepository.findById(chat.id).getOrNull() ?: throw IllegalArgumentException("Chat not found: ${chat.id}")
+        val existingEntity = chatRepository.findById(chat.id!!).getOrNull() ?: throw IllegalArgumentException("Chat not found: ${chat.id}")
 
         chat.toChatEntity(existingEntity)
         fillAssistants(existingEntity, chat.assistants)

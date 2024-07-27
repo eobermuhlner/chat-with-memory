@@ -17,7 +17,7 @@ import jakarta.persistence.OrderBy
 @Entity
 class ChatEntity {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long = 0
+    var id: Long? = null
 
     var title: String = ""
 

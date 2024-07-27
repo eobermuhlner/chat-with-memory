@@ -115,16 +115,17 @@ class ChatMessageService(
     }
 
     private fun retrieveRelevantDocumentSegmentsText(chat: ChatEntity, assistant: AssistantEntity, message: String): String {
-        val documentIds = assistant.documents.map { it.id }.toSet()
+        val documentIds = assistant.documents.mapNotNull { it.id }.toSet()
         val segments = documentRetrievalService.retrieveRelevantTextSegments(message, documentIds, 3, 0.5)
 
         return segments.joinToString("\n") { it.text() }
     }
 
     private fun retrieveRelevantMessagesText(chat: ChatEntity, message: String): String {
-        if (message.isBlank()) return ""
+        val chatId = chat.id
+        if (message.isBlank() || chatId == null) return ""
         val relevantMessageIds = messageRetrievalService.retrieveMessageIds(message, properties.relevantMessagesMaxResult)
-        val relevantMessages = chatMessageRepository.findAllByChatIdAndIdIn(chat.id, relevantMessageIds)
+        val relevantMessages = chatMessageRepository.findAllByChatIdAndIdIn(chatId, relevantMessageIds)
         val longTermMessages = relevantMessages.filter { !it.shortTermMemory }
         return longTermMessages.joinToString("\n") { it.toChatString() }
     }
@@ -228,7 +229,7 @@ class ChatMessageService(
 
         val result = when (command[0]) {
             "/assistants" -> assistantRepository.findAll().joinToString("\n\n") { it.toChatString() }
-            "/messages" -> chatMessageRepository.findAllByChatId(chat.id).joinToString("\n\n") { it.toChatString() }
+            "/messages" -> chatMessageRepository.findAllByChatId(chat.id!!).joinToString("\n\n") { it.toChatString() }
             "/count" -> chatMessageRepository.findAll().count().toString()
             "/context" -> {
                 val argumentText = lines.subList(1, lines.size).joinToString("\n")

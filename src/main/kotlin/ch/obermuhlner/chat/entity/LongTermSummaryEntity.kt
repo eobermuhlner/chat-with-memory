@@ -9,7 +9,7 @@ class LongTermSummaryEntity {
     }
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long = 0
+    var id: Long? = null
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "chat_id")

@@ -14,7 +14,7 @@ import jakarta.persistence.ManyToMany
 @Entity
 class AssistantEntity {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long = 0
+    var id: Long? = null
 
     var name: String = ""
 
