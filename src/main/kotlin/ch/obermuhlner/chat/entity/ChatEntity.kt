@@ -8,6 +8,8 @@ import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.JoinTable
 import jakarta.persistence.ManyToMany
 import jakarta.persistence.OneToMany
 import jakarta.persistence.OrderBy
@@ -34,4 +36,12 @@ class ChatEntity {
     @Convert(converter = ToolListConverter::class)
     var tools: List<Tool> = mutableListOf()
 
+
+    @ManyToMany
+    @JoinTable(
+        name = "chat_documents",
+        joinColumns = [JoinColumn(name = "chat_id")],
+        inverseJoinColumns = [JoinColumn(name = "document_id")]
+    )
+    var documents: MutableSet<DocumentEntity> = mutableSetOf()
 }

@@ -3,10 +3,12 @@ package ch.obermuhlner.chat.service
 import ch.obermuhlner.chat.entity.AssistantEntity
 import ch.obermuhlner.chat.entity.ChatEntity
 import ch.obermuhlner.chat.entity.ChatMessageEntity
+import ch.obermuhlner.chat.entity.DocumentEntity
 import ch.obermuhlner.chat.model.Assistant
 import ch.obermuhlner.chat.model.Chat
 import ch.obermuhlner.chat.model.ChatDetails
 import ch.obermuhlner.chat.model.ChatMessage
+import ch.obermuhlner.chat.model.Document
 import ch.obermuhlner.chat.model.MessageType
 import ch.obermuhlner.chat.model.Tool
 import java.time.temporal.ChronoUnit
@@ -55,6 +57,7 @@ fun ChatEntity.toChatDetails(): ChatDetails {
         title = this.title,
         prompt = this.prompt,
         assistants = this.assistants.map { it.toAssistant() }.toMutableList(),
+        documents = this.documents.map { it.toDocument() }.toMutableList(),
         tools = this.tools.map { it.name }
     )
 }
@@ -82,7 +85,8 @@ fun AssistantEntity.toAssistant(): Assistant {
         description = this.description,
         prompt = this.prompt,
         sortIndex = this.sortIndex,
-        tools = this.tools.map { it.name }
+        tools = this.tools.map { it.name },
+        documents = this.documents.mapNotNull { it.toDocument() }
     )
 }
 
@@ -100,5 +104,15 @@ fun Assistant.toAssistantEntity(assistantEntity: AssistantEntity = AssistantEnti
                 null
             }
         }
+        // documents are mapped in the AssistantService
     }
+}
+
+fun DocumentEntity.toDocument(): Document {
+    return Document(
+        id = this.id,
+        name = this.name,
+        type = this.type,
+        size = this.data.size
+    )
 }

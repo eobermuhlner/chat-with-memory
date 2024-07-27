@@ -37,4 +37,12 @@ class AssistantEntity {
     @Column(name = "tools")
     @Convert(converter = ToolListConverter::class)
     var tools: List<Tool> = mutableListOf()
+
+    @ManyToMany
+    @JoinTable(
+        name = "assistant_documents",
+        joinColumns = [JoinColumn(name = "assistant_id")],
+        inverseJoinColumns = [JoinColumn(name = "document_id")]
+    )
+    var documents: MutableSet<DocumentEntity> = mutableSetOf()
 }

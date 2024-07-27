@@ -29,6 +29,7 @@ class ChatMessageService(
     private val aiService: AiService,
     private val longTermSummaryRepository: LongTermSummaryRepository,
     private val properties: ChatMessageServiceProperties,
+    private val documentRetrievalService: DocumentRetrievalService,
 ) {
 
     @Transactional(readOnly = true)
@@ -91,7 +92,9 @@ class ChatMessageService(
         messageRetrievalService.addMessage(savedUserMessageEntity)
 
         val assistantMessages = chat.assistants.mapNotNull { assistant ->
-            val context = createContext(chat, assistant, userMessage, relevantMessagesText)
+            val relevantDocumentSegmentsText = retrieveRelevantDocumentSegmentsText(chat, assistant, message)
+
+            val context = createContext(chat, assistant, userMessage, relevantMessagesText, relevantDocumentSegmentsText)
             val tools = chat.tools.toMutableSet()
             tools.addAll(assistant.tools)
             val answer = aiService.generateWithTools(context, tools)
@@ -111,6 +114,13 @@ class ChatMessageService(
         return ChatResponse(assistantMessages)
     }
 
+    private fun retrieveRelevantDocumentSegmentsText(chat: ChatEntity, assistant: AssistantEntity, message: String): String {
+        val documentIds = assistant.documents.map { it.id }.toSet()
+        val segments = documentRetrievalService.retrieveRelevantTextSegments(message, documentIds, 3, 0.5)
+
+        return segments.joinToString("\n") { it.text() }
+    }
+
     private fun retrieveRelevantMessagesText(chat: ChatEntity, message: String): String {
         if (message.isBlank()) return ""
         val relevantMessageIds = messageRetrievalService.retrieveMessageIds(message, properties.relevantMessagesMaxResult)
@@ -119,7 +129,8 @@ class ChatMessageService(
         return longTermMessages.joinToString("\n") { it.toChatString() }
     }
 
-    private fun createContext(chat: ChatEntity, assistant: AssistantEntity, userMessage: ChatMessageEntity, relevantMessagesText: String): String {
+    private fun createContext(chat: ChatEntity, assistant: AssistantEntity, userMessage: ChatMessageEntity, relevantMessagesText: String, relevantDocumentSegmentsText: String): String {
+
         var shortTermMessages = chatMessageRepository.findAllShortTermMemory(chat)
         val shortTermCount = shortTermMessages.count()
         if (shortTermCount > properties.maxMessageCount) {
@@ -147,6 +158,9 @@ class ChatMessageService(
             |
             |## Relevant messages
             |$relevantMessagesText
+            |
+            |## Relevant documents
+            |$relevantDocumentSegmentsText
             |
             |## Memory
             |$longTermText
@@ -218,13 +232,15 @@ class ChatMessageService(
             "/count" -> chatMessageRepository.findAll().count().toString()
             "/context" -> {
                 val argumentText = lines.subList(1, lines.size).joinToString("\n")
+                val assistant = chat.assistants.firstOrNull() ?: AssistantEntity()
                 val relevantMessagesText = retrieveRelevantMessagesText(chat, argumentText)
+                val relevantDocumentSegmentsText = retrieveRelevantDocumentSegmentsText(chat, assistant, message)
                 val userMessage = ChatMessageEntity().apply {
                     this.chat = chat
                     this.messageType = MessageType.User
                     this.text = argumentText
                 }
-                createContext(chat, chat.assistants.firstOrNull() ?: AssistantEntity(), userMessage, relevantMessagesText)
+                createContext(chat, assistant, userMessage, relevantMessagesText, relevantDocumentSegmentsText)
             }
             "/help" -> """
                 Commands:

@@ -165,6 +165,18 @@ class DataInitializerConfig {
                     tools = listOf(Tool.Weather)
                     chats.add(chatAstronomy)
                 })
+
+                assistantRepository.save(AssistantEntity().apply {
+                    name = "Isaac"
+                    description = "Librarian"
+                    prompt = """
+                        You are Isaac, a professional expert librarian.
+                        You answer questions concisely after consulting stored documents and only provide information from the documents.
+                        You always cite sources.
+                    """.trimIndent()
+                    sortIndex = 50
+                    chats.add(chatAstronomy)
+                })
             }
         }
     }

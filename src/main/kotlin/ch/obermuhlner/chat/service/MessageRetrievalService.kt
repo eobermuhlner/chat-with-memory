@@ -20,7 +20,7 @@ class MessageRetrievalService(
         private const val METADATA_TYPE = "Type"
         private const val METADATA_SENDER = "Sender"
         private const val METADATA_TIMESTAMP = "Timestamp"
-        private const val EMBEDDING_FILE = "./data/embeddings.json"
+        private const val EMBEDDING_FILE = "./data/message.embeddings.json"
 
         private fun initializeEmbeddingStore(): InMemoryEmbeddingStore<TextSegment> {
             return if (File(EMBEDDING_FILE).exists()) {

@@ -1,8 +1,6 @@
 package ch.obermuhlner.chat.controller
 
 import ch.obermuhlner.chat.model.Assistant
-import ch.obermuhlner.chat.model.Chat
-import ch.obermuhlner.chat.model.ChatDetails
 import ch.obermuhlner.chat.service.AssistantService
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -44,5 +42,15 @@ class AssistantController(
     @DeleteMapping("{id}")
     fun deleteById(@PathVariable id: Long, @RequestParam(defaultValue = "false") deleteMessages: Boolean) {
         assistantService.deleteById(id, deleteMessages)
+    }
+
+    @PostMapping("{assistantId}/documents/{documentId}")
+    fun addDocumentToAssistant(@PathVariable assistantId: Long, @PathVariable documentId: Long) {
+        assistantService.addDocumentToAssistant(assistantId, documentId)
+    }
+
+    @DeleteMapping("{assistantId}/documents/{documentId}")
+    fun removeDocumentFromAssistant(@PathVariable assistantId: Long, @PathVariable documentId: Long) {
+        assistantService.removeDocumentFromAssistant(assistantId, documentId)
     }
 }

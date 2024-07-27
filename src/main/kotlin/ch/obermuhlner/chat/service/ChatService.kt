@@ -1,35 +1,26 @@
 package ch.obermuhlner.chat.service
 
-import ch.obermuhlner.chat.config.DataInitializerConfig
-import ch.obermuhlner.chat.entity.AssistantEntity
 import ch.obermuhlner.chat.entity.ChatEntity
-import ch.obermuhlner.chat.entity.ChatMessageEntity
-import ch.obermuhlner.chat.entity.LongTermSummaryEntity
 import ch.obermuhlner.chat.model.Assistant
 import ch.obermuhlner.chat.model.Chat
 import ch.obermuhlner.chat.model.ChatDetails
-import ch.obermuhlner.chat.model.ChatMessage
-import ch.obermuhlner.chat.model.ChatResponse
-import ch.obermuhlner.chat.model.MessageType
+import ch.obermuhlner.chat.model.Document
 import ch.obermuhlner.chat.repository.AssistantRepository
-import ch.obermuhlner.chat.repository.ChatMessageRepository
 import ch.obermuhlner.chat.repository.ChatRepository
-import ch.obermuhlner.chat.repository.LongTermSummaryRepository
+import ch.obermuhlner.chat.repository.DocumentRepository
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.time.Instant
 import java.time.LocalDateTime
-import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
 import kotlin.jvm.optionals.getOrNull
 
 @Service
 class ChatService(
     private val chatRepository: ChatRepository,
     private val assistantRepository: AssistantRepository,
+    private val documentRepository: DocumentRepository,
 ) {
     companion object {
         const val NO_ANSWER = "NO_ANSWER"
@@ -58,6 +49,7 @@ class ChatService(
         }
         val chatEntity = chat.toChatEntity()
         fillAssistants(chatEntity, chat.assistants)
+        fillDocuments(chatEntity, chat.documents)
 
         val savedEntity = chatRepository.save(chatEntity)
         return savedEntity.toChatDetails()
@@ -69,6 +61,7 @@ class ChatService(
 
         chat.toChatEntity(existingEntity)
         fillAssistants(existingEntity, chat.assistants)
+        fillDocuments(existingEntity, chat.documents)
 
         chatRepository.save(existingEntity)
         return existingEntity.toChatDetails()
@@ -84,6 +77,18 @@ class ChatService(
         chatEntity.assistants.clear()
         chatEntity.assistants.addAll(currentAssistants)
         chatEntity.assistants.forEach { it.chats.add(chatEntity) }
+    }
+
+    private fun fillDocuments(chatEntity: ChatEntity, documents: List<Document>) {
+        val currentDocuments = documentRepository.findAllById(documents.map { it.id }).toMutableSet()
+
+        // Remove documents no longer associated with the assistant
+        chatEntity.documents.filterNot { it in currentDocuments }.forEach {
+            it.chats.remove(chatEntity)
+        }
+        chatEntity.documents.clear()
+        chatEntity.documents.addAll(currentDocuments)
+        chatEntity.documents.forEach { it.chats.add(chatEntity) }
     }
 
     @Transactional

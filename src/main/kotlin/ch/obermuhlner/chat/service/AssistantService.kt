@@ -1,9 +1,12 @@
 package ch.obermuhlner.chat.service
 
+import ch.obermuhlner.chat.entity.AssistantEntity
 import ch.obermuhlner.chat.model.Assistant
+import ch.obermuhlner.chat.model.Document
 import ch.obermuhlner.chat.repository.AssistantRepository
 import ch.obermuhlner.chat.repository.ChatMessageRepository
 import ch.obermuhlner.chat.repository.ChatRepository
+import ch.obermuhlner.chat.repository.DocumentRepository
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -15,6 +18,7 @@ class AssistantService(
     private val assistantRepository: AssistantRepository,
     private val chatRepository: ChatRepository,
     private val chatMessageRepository: ChatMessageRepository,
+    private val documentRepository: DocumentRepository
 ) {
 
     @Transactional(readOnly = true)
@@ -28,7 +32,10 @@ class AssistantService(
         if (assistant.id != 0L) {
             throw IllegalArgumentException("Cannot create assistant with id 0")
         }
-        val savedEntity = assistantRepository.save(assistant.toAssistantEntity())
+        val assistantEntity = assistant.toAssistantEntity()
+        fillDocuments(assistantEntity, assistant.documents)
+        val savedEntity = assistantRepository.save(assistantEntity)
+
         return savedEntity.toAssistant()
     }
 
@@ -36,8 +43,23 @@ class AssistantService(
     fun update(assistant: Assistant): Assistant {
         val existingEntity = assistantRepository.findById(assistant.id).getOrNull() ?: throw IllegalArgumentException("Assistant not found: ${assistant.id}")
         assistant.toAssistantEntity(existingEntity)
+
+        fillDocuments(existingEntity, assistant.documents)
         val savedEntity = assistantRepository.save(existingEntity)
+
         return savedEntity.toAssistant()
+    }
+
+    private fun fillDocuments(assistantEntity: AssistantEntity, documents: List<Document>) {
+        val currentDocuments = documentRepository.findAllById(documents.map { it.id }).toMutableSet()
+
+        // Remove documents no longer associated with the assistant
+        assistantEntity.documents.filterNot { it in currentDocuments }.forEach {
+            it.assistants.remove(assistantEntity)
+        }
+        assistantEntity.documents.clear()
+        assistantEntity.documents.addAll(currentDocuments)
+        assistantEntity.documents.forEach { it.assistants.add(assistantEntity) }
     }
 
     @Transactional
@@ -61,5 +83,21 @@ class AssistantService(
         assistant.chats.clear()
 
         assistantRepository.deleteById(id)
+    }
+
+    @Transactional
+    fun addDocumentToAssistant(assistantId: Long, documentId: Long) {
+        val assistant = assistantRepository.findById(assistantId).orElseThrow { EntityNotFoundException("Assistant not found: $assistantId") }
+        val document = documentRepository.findById(documentId).orElseThrow { EntityNotFoundException("Document not found: $documentId") }
+        assistant.documents.add(document)
+        assistantRepository.save(assistant)
+    }
+
+    @Transactional
+    fun removeDocumentFromAssistant(assistantId: Long, documentId: Long) {
+        val assistant = assistantRepository.findById(assistantId).orElseThrow { EntityNotFoundException("Assistant not found: $assistantId") }
+        val document = documentRepository.findById(documentId).orElseThrow { EntityNotFoundException("Document not found: $documentId") }
+        assistant.documents.remove(document)
+        assistantRepository.save(assistant)
     }
 }
