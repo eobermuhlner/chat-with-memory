@@ -6,47 +6,34 @@ import dev.langchain4j.data.document.Document
 import dev.langchain4j.data.document.parser.apache.tika.ApacheTikaDocumentParserFactory
 import dev.langchain4j.data.document.splitter.DocumentByParagraphSplitter
 import dev.langchain4j.data.segment.TextSegment
-import dev.langchain4j.model.embedding.AllMiniLmL6V2EmbeddingModel
 import dev.langchain4j.model.embedding.EmbeddingModel
 import dev.langchain4j.store.embedding.EmbeddingSearchRequest
+import dev.langchain4j.store.embedding.EmbeddingStore
 import dev.langchain4j.store.embedding.filter.MetadataFilterBuilder
-import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.ByteArrayInputStream
-import java.io.File
 
 @Service
 class DocumentRetrievalService(
-    private val embeddingModel: EmbeddingModel = AllMiniLmL6V2EmbeddingModel(),
-    private val embeddingStore: InMemoryEmbeddingStore<TextSegment> = initializeEmbeddingStore(),
+    private val embeddingModel: EmbeddingModel,
+    private val documentEmbeddingStore: EmbeddingStore<TextSegment>,
     @Value("\${openai.api-key:demo}") private val openAiApiKey: String,
 ) {
     companion object {
         private const val METADATA_FILENAME = "filename"
-        private const val METADATA_ID = "id"
-        private const val EMBEDDING_FILE = "./data/document.embeddings.json"
-
-        private fun initializeEmbeddingStore(): InMemoryEmbeddingStore<TextSegment> {
-            return if (File(EMBEDDING_FILE).exists()) {
-                InMemoryEmbeddingStore.fromFile(EMBEDDING_FILE)
-            } else {
-                InMemoryEmbeddingStore()
-            }
-        }
+        private const val METADATA_DOCUMENT_ID = "document_id"
     }
 
     fun addDocument(documentEntity: DocumentEntity, splitterStrategy: SplitterStrategy) {
         val parser = ApacheTikaDocumentParserFactory().create()
         val document = parser.parse(ByteArrayInputStream(documentEntity.data))
         document.metadata().put(METADATA_FILENAME, documentEntity.name)
-        document.metadata().put(METADATA_ID, documentEntity.id!!)
+        document.metadata().put(METADATA_DOCUMENT_ID, documentEntity.id!!)
         addDocument(document, splitterStrategy)
     }
 
     private fun addDocument(document: Document, splitterStrategy: SplitterStrategy) {
-        val id = document.metadata().getString(METADATA_FILENAME)
-
         val splitter = when (splitterStrategy) {
             SplitterStrategy.Paragraph -> DocumentByParagraphSplitter(2000, 0)
             SplitterStrategy.AI -> AiDocumentSplitter(openAiApiKey)
@@ -55,23 +42,18 @@ class DocumentRetrievalService(
         val segments = splitter.split(document)
         for (segment in segments) {
             val embedding = embeddingModel.embed(segment).content()
-            embeddingStore.add(id, embedding, segment) // FIXME id = filename ?
+            documentEmbeddingStore.add(embedding, segment)
         }
-        saveEmbeddingStore()
-    }
-
-    private fun saveEmbeddingStore() {
-        embeddingStore.serializeToFile(EMBEDDING_FILE)
     }
 
     fun getAllTextSegments(id: Long): List<TextSegment> {
         val embedding = embeddingModel.embed("content").content()
         val request = EmbeddingSearchRequest.builder()
             .queryEmbedding(embedding)
-            .filter(MetadataFilterBuilder(METADATA_ID).isEqualTo(id))
+            .filter(MetadataFilterBuilder(METADATA_DOCUMENT_ID).isEqualTo(id))
             .maxResults(9999)
             .build()
-        val searchResult = embeddingStore.search(request)
+        val searchResult = documentEmbeddingStore.search(request)
 
         return searchResult.matches().map { it.embedded() }
     }
@@ -82,11 +64,11 @@ class DocumentRetrievalService(
         val embedding = embeddingModel.embed(text).content()
         val request = EmbeddingSearchRequest.builder()
             .queryEmbedding(embedding)
-            .filter(MetadataFilterBuilder(METADATA_ID).isIn(ids))
+            .filter(MetadataFilterBuilder(METADATA_DOCUMENT_ID).isIn(ids))
             .maxResults(maxResults)
             .minScore(minScore)
             .build()
-        val searchResult = embeddingStore.search(request)
+        val searchResult = documentEmbeddingStore.search(request)
 
         return searchResult.matches().map { it.embedded() }
     }

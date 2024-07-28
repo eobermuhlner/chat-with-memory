@@ -1,0 +1,11 @@
+# Run `docker compose up` in root of project to start postgres with pgvector
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: chat
+    password: chatchat
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
