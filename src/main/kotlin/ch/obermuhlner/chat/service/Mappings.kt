@@ -4,6 +4,7 @@ import ch.obermuhlner.chat.entity.AssistantEntity
 import ch.obermuhlner.chat.entity.ChatEntity
 import ch.obermuhlner.chat.entity.ChatMessageEntity
 import ch.obermuhlner.chat.entity.DocumentEntity
+import ch.obermuhlner.chat.entity.UserEntity
 import ch.obermuhlner.chat.model.Assistant
 import ch.obermuhlner.chat.model.Chat
 import ch.obermuhlner.chat.model.ChatDetails
@@ -11,6 +12,7 @@ import ch.obermuhlner.chat.model.ChatMessage
 import ch.obermuhlner.chat.model.Document
 import ch.obermuhlner.chat.model.MessageType
 import ch.obermuhlner.chat.model.Tool
+import ch.obermuhlner.chat.model.User
 import java.time.temporal.ChronoUnit
 
 fun AssistantEntity.toChatString(): String {
@@ -115,4 +117,21 @@ fun DocumentEntity.toDocument(): Document {
         type = this.type,
         size = this.data.size
     )
+}
+fun UserEntity.toUser(): User {
+    return User(
+        id = this.id,
+        username = this.username,
+        password = ""
+    )
+}
+
+fun User.toUserEntity(userEntity: UserEntity = UserEntity(), keepExistingPassword: Boolean = false): UserEntity {
+    return userEntity.apply {
+        id = this@toUserEntity.id
+        username = this@toUserEntity.username
+        if (!keepExistingPassword) {
+            password = this@toUserEntity.password
+        }
+    }
 }

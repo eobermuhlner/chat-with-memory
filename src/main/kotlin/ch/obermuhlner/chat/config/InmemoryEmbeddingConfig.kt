@@ -11,8 +11,8 @@ import org.springframework.context.annotation.Profile
 
 
 @Configuration
-@Profile("h2")
-class EmbeddingH2Config {
+@Profile("test")
+class InmemoryEmbeddingConfig {
     @Bean
     fun embeddingModel(): EmbeddingModel {
         return AllMiniLmL6V2EmbeddingModel()

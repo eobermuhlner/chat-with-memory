@@ -1,0 +1,3 @@
+spring:
+  config:
+    import: "classpath:config/db/application-h2.yml"

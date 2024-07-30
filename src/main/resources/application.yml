@@ -1,14 +1,16 @@
-server:
-  port: 8092
-
 spring:
   profiles:
-#    active: h2
-    active: postgres
+    active: dev
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
+
+server:
+  port: 8092
+
+cors:
+  allowed-origin: http://localhost:3000
 
 message:
   service:

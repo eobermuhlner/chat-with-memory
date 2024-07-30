@@ -34,6 +34,7 @@ Assistants also have long-term memory capabilities, ensuring continuity and cont
 - **Short-Term Memory:** Keeps the last few messages in the context of the next prompt, ensuring immediate continuity in the conversation.
 - **Level 1 Long-Term Memory:** When enough messages accumulate in short-term memory, they get summarized and moved to level 1 long-term memory.
 - **Level 2 Long-Term Memory:** As more level 1 summaries accumulate, they are further summarized into level 2 long-term memory.
+- **Level n Long-Term Memory:** Summarization continues progressively to any amount of level necessary.
 - **Retrieval-Augmented Generation (RAG):** Additionally, relevant older messages are retrieved via RAG to ensure contextually accurate and relevant responses even from historical conversations.
 
 ## Getting Started
