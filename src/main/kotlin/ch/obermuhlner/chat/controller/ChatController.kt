@@ -1,11 +1,7 @@
 package ch.obermuhlner.chat.controller
 
 import ch.obermuhlner.chat.model.Chat
-import ch.obermuhlner.chat.model.ChatDetails
-import ch.obermuhlner.chat.model.ChatRequest
-import ch.obermuhlner.chat.model.ChatResponse
 import ch.obermuhlner.chat.service.ChatService
-import ch.obermuhlner.chat.service.ChatService.Companion.NO_ANSWER
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -14,8 +10,6 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 @RestController
 @RequestMapping("/chats")
@@ -24,7 +18,7 @@ class ChatController(
 ) {
 
     @GetMapping("/new")
-    fun createNew(): ChatDetails {
+    fun createNew(): Chat {
         return chatService.createNew()
     }
 
@@ -34,17 +28,17 @@ class ChatController(
     }
 
     @GetMapping("{id}")
-    fun findById(@PathVariable id: Long): ChatDetails? {
+    fun findById(@PathVariable id: Long): Chat? {
         return chatService.findById(id)
     }
 
     @PostMapping
-    fun create(@RequestBody chat: ChatDetails): ChatDetails {
+    fun create(@RequestBody chat: Chat): Chat {
         return chatService.create(chat)
     }
 
     @PutMapping("{id}")
-    fun update(@PathVariable id: Long, @RequestBody chat: ChatDetails): ChatDetails {
+    fun update(@PathVariable id: Long, @RequestBody chat: Chat): Chat {
         chat.id = id
         return chatService.update(chat)
     }

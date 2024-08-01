@@ -7,7 +7,6 @@ import ch.obermuhlner.chat.entity.DocumentEntity
 import ch.obermuhlner.chat.entity.UserEntity
 import ch.obermuhlner.chat.model.Assistant
 import ch.obermuhlner.chat.model.Chat
-import ch.obermuhlner.chat.model.ChatDetails
 import ch.obermuhlner.chat.model.ChatMessage
 import ch.obermuhlner.chat.model.Document
 import ch.obermuhlner.chat.model.MessageType
@@ -50,13 +49,6 @@ fun ChatMessageEntity.toChatMessage(): ChatMessage {
 fun ChatEntity.toChat(): Chat {
     return Chat(
         id = this.id,
-        title = this.title
-    )
-}
-
-fun ChatEntity.toChatDetails(): ChatDetails {
-    return ChatDetails(
-        id = this.id,
         title = this.title,
         prompt = this.prompt,
         assistants = this.assistants.map { it.toAssistant() }.toMutableList(),
@@ -65,7 +57,7 @@ fun ChatEntity.toChatDetails(): ChatDetails {
     )
 }
 
-fun ChatDetails.toChatEntity(chatEntity: ChatEntity = ChatEntity()): ChatEntity {
+fun Chat.toChatEntity(chatEntity: ChatEntity = ChatEntity()): ChatEntity {
     return chatEntity.apply {
         id = this@toChatEntity.id
         title = this@toChatEntity.title
@@ -89,7 +81,7 @@ fun AssistantEntity.toAssistant(): Assistant {
         prompt = this.prompt,
         sortIndex = this.sortIndex,
         tools = this.tools.map { it.name },
-        documents = this.documents.mapNotNull { it.toDocument() }
+        documents = this.documents.map { it.toDocument() }
     )
 }
 

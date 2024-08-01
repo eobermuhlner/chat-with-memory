@@ -3,7 +3,6 @@ package ch.obermuhlner.chat.service
 import ch.obermuhlner.chat.entity.ChatEntity
 import ch.obermuhlner.chat.model.Assistant
 import ch.obermuhlner.chat.model.Chat
-import ch.obermuhlner.chat.model.ChatDetails
 import ch.obermuhlner.chat.model.Document
 import ch.obermuhlner.chat.repository.AssistantRepository
 import ch.obermuhlner.chat.repository.ChatRepository
@@ -26,9 +25,9 @@ class ChatService(
         const val NO_ANSWER = "NO_ANSWER"
     }
 
-    fun createNew(): ChatDetails {
+    fun createNew(): Chat {
         val now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-        return ChatDetails(
+        return Chat(
             id = null,
             title = "Chat $now",
             prompt = "If you have no relevant answer or the answer was already given, respond with $NO_ANSWER.",
@@ -40,10 +39,10 @@ class ChatService(
     fun findAll(): List<Chat> = chatRepository.findAll().map { it.toChat() }
 
     @Transactional(readOnly = true)
-    fun findById(id: Long): ChatDetails? = chatRepository.findByIdOrNull(id)?.toChatDetails()
+    fun findById(id: Long): Chat? = chatRepository.findByIdOrNull(id)?.toChat()
 
     @Transactional
-    fun create(chat: ChatDetails): ChatDetails {
+    fun create(chat: Chat): Chat {
         if (chat.id != null) {
             throw IllegalArgumentException("Cannot create chat with id")
         }
@@ -52,11 +51,11 @@ class ChatService(
         fillDocuments(chatEntity, chat.documents)
 
         val savedEntity = chatRepository.save(chatEntity)
-        return savedEntity.toChatDetails()
+        return savedEntity.toChat()
     }
 
     @Transactional
-    fun update(chat: ChatDetails): ChatDetails {
+    fun update(chat: Chat): Chat {
         val existingEntity = chatRepository.findById(chat.id!!).getOrNull() ?: throw IllegalArgumentException("Chat not found: ${chat.id}")
 
         chat.toChatEntity(existingEntity)
@@ -64,7 +63,7 @@ class ChatService(
         fillDocuments(existingEntity, chat.documents)
 
         chatRepository.save(existingEntity)
-        return existingEntity.toChatDetails()
+        return existingEntity.toChat()
     }
 
     private fun fillAssistants(chatEntity: ChatEntity, assistants: List<Assistant>) {
