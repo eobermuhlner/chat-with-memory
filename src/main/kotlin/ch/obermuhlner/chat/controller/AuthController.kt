@@ -38,7 +38,7 @@ class AuthController(
         }
 
         val userDetails = userDetailsService.loadUserByUsername(authenticationRequest.username)
-        val jwt = JwtUtil.generateToken(userDetails.username, listOf()) // FIXME roles
+        val jwt = JwtUtil.generateToken(userDetails.username, userDetails.authorities.map { it.authority })
 
         return ResponseEntity.ok(mapOf("token" to jwt))
     }
