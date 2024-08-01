@@ -13,6 +13,7 @@ import ch.obermuhlner.chat.model.Document
 import ch.obermuhlner.chat.model.MessageType
 import ch.obermuhlner.chat.model.Tool
 import ch.obermuhlner.chat.model.User
+import ch.obermuhlner.chat.repository.RoleRepository
 import java.time.temporal.ChronoUnit
 
 fun AssistantEntity.toChatString(): String {
@@ -122,16 +123,20 @@ fun UserEntity.toUser(): User {
     return User(
         id = this.id,
         username = this.username,
-        password = ""
+        password = "",
+        roles = this.roles.map { it.name },
     )
 }
 
-fun User.toUserEntity(userEntity: UserEntity = UserEntity(), keepExistingPassword: Boolean = false): UserEntity {
+fun User.toUserEntity(userEntity: UserEntity = UserEntity(), roleRepository: RoleRepository, keepExistingPassword: Boolean = false): UserEntity {
     return userEntity.apply {
         id = this@toUserEntity.id
         username = this@toUserEntity.username
         if (!keepExistingPassword) {
             password = this@toUserEntity.password
         }
+        roles = this@toUserEntity.roles.mapNotNull { role ->
+            roleRepository.findByName(role)
+        }.toMutableSet()
     }
 }

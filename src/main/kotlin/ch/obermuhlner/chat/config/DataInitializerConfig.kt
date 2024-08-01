@@ -2,16 +2,21 @@ package ch.obermuhlner.chat.config
 
 import ch.obermuhlner.chat.entity.AssistantEntity
 import ch.obermuhlner.chat.entity.ChatEntity
+import ch.obermuhlner.chat.entity.RoleEntity
+import ch.obermuhlner.chat.entity.UserEntity
 import ch.obermuhlner.chat.model.Tool
 import ch.obermuhlner.chat.model.User
 import ch.obermuhlner.chat.repository.AssistantRepository
 import ch.obermuhlner.chat.repository.ChatRepository
+import ch.obermuhlner.chat.repository.RoleRepository
+import ch.obermuhlner.chat.repository.UserRepository
 import ch.obermuhlner.chat.service.ChatService.Companion.NO_ANSWER
 import ch.obermuhlner.chat.service.UserService
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.ApplicationRunner
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.security.crypto.password.PasswordEncoder
 
 @Configuration
 class DataInitializerConfig(
@@ -27,16 +32,30 @@ class DataInitializerConfig(
     }
 
     @Bean
-    fun dataInitializer(userService: UserService, assistantRepository: AssistantRepository, chatRepository: ChatRepository): ApplicationRunner {
+    fun dataInitializer(
+        userRepository: UserRepository,
+        passwordEncoder: PasswordEncoder,
+        roleRepository: RoleRepository,
+        assistantRepository: AssistantRepository,
+        chatRepository: ChatRepository
+    ): ApplicationRunner {
         return ApplicationRunner {
-            if (userService.findAll().isEmpty()) {
-                userService.create(
-                    User(
-                        id = null,
-                        username = adminUsername,
-                        password = adminPassword,
-                    )
-                )
+            if (roleRepository.count() == 0L) {
+                roleRepository.save(RoleEntity().apply{
+                    name = "ROLE_ADMIN"
+                })
+                roleRepository.save(RoleEntity().apply{
+                    name = "ROLE_USER"
+                })
+            }
+
+            if (userRepository.count() == 0L) {
+                val adminRole = roleRepository.findByName("ROLE_ADMIN")!!
+                userRepository.save(UserEntity().apply {
+                    username = adminUsername
+                    password = passwordEncoder.encode(adminPassword)
+                    roles.add(adminRole)
+                })
             }
 
             if (assistantRepository.count() == 0L) {

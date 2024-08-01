@@ -1,9 +1,11 @@
 package ch.obermuhlner.chat.service
 
 import ch.obermuhlner.chat.model.User
+import ch.obermuhlner.chat.repository.RoleRepository
 import ch.obermuhlner.chat.repository.UserRepository
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.core.userdetails.UsernameNotFoundException
@@ -13,8 +15,10 @@ import org.springframework.transaction.annotation.Transactional
 import kotlin.jvm.optionals.getOrNull
 
 @Service
+@PreAuthorize("hasRole('ROLE_ADMIN')")
 class UserService(
     private val userRepository: UserRepository,
+    private val roleRepository: RoleRepository,
     private val passwordEncoder: PasswordEncoder
 ) {
 
@@ -29,7 +33,7 @@ class UserService(
         if (user.id != null) {
             throw IllegalArgumentException("Cannot create user with id")
         }
-        val userEntity = user.toUserEntity()
+        val userEntity = user.toUserEntity(roleRepository = roleRepository)
         userEntity.password = passwordEncoder.encode(user.password)
 
         val savedEntity = userRepository.save(userEntity)
@@ -40,7 +44,7 @@ class UserService(
     @Transactional
     fun update(user: User): User {
         val existingEntity = userRepository.findById(user.id!!).getOrNull() ?: throw IllegalArgumentException("User not found: ${user.id}")
-        user.toUserEntity(existingEntity, keepExistingPassword = true)
+        user.toUserEntity(existingEntity, roleRepository, keepExistingPassword = true)
 
         val savedEntity = userRepository.save(existingEntity)
 

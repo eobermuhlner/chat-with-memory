@@ -1,20 +1,23 @@
 package ch.obermuhlner.chat.service
 
+import ch.obermuhlner.chat.entity.UserEntity
 import ch.obermuhlner.chat.repository.UserRepository
+import org.springframework.security.core.GrantedAuthority
+import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.core.userdetails.User
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 
 @Service
-class CustomerUserDetailsService(
-    private val userRepository: UserRepository,
-): UserDetailsService {
-
-    @Transactional(readOnly = true)
+class CustomUserDetailsService(private val userRepository: UserRepository) : UserDetailsService {
     override fun loadUserByUsername(username: String): UserDetails {
-        val user = userRepository.findByUsername(username) ?: throw UsernameNotFoundException("User not found")
-        return org.springframework.security.core.userdetails.User(user.username, user.password, emptyList())
+        val userEntity: UserEntity = userRepository.findByUsername(username)
+            ?: throw UsernameNotFoundException("User not found with username: $username")
+
+        val authorities: Set<GrantedAuthority> = userEntity.roles.map { SimpleGrantedAuthority(it.name) }.toSet()
+
+        return User(userEntity.username, userEntity.password, authorities)
     }
 }
