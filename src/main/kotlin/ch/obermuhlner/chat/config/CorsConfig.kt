@@ -1,22 +1,24 @@
-package ch.obermuhlner.chat
+package ch.obermuhlner.chat.config
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 import org.springframework.web.filter.CorsFilter
 
-
 @Configuration
-class CorsConfig {
+class CorsConfig(
+    @Value("\${cors.allowed-origin}") private val corsAllowedOrigin: String,
+) {
     @Bean
     fun corsFilter(): CorsFilter {
         val source = UrlBasedCorsConfigurationSource()
         val config = CorsConfiguration()
-        config.allowCredentials = false // Do not allow credentials
-        config.addAllowedOrigin("*") // Allow all origins
-        config.addAllowedHeader("*") // Allow all headers
-        config.addAllowedMethod("*") // Allow all methods
+        config.allowCredentials = true
+        config.addAllowedOrigin(corsAllowedOrigin)
+        config.addAllowedHeader("*")
+        config.addAllowedMethod("*")
         source.registerCorsConfiguration("/**", config)
         return CorsFilter(source)
     }

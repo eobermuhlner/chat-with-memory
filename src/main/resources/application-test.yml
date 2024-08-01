@@ -1,3 +1,5 @@
 spring:
   config:
-    import: "classpath:config/db/application-h2.yml"
+    import:
+      - "classpath:config/db/application-h2-memory.yml"
+      - "classpath:config/security/application-noauth.yml"

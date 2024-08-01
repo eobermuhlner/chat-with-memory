@@ -1,3 +1,8 @@
+config:
+  db:
+    h2-file:
+      enabled: true
+
 spring:
   datasource:
     url: jdbc:h2:file:./data/chatdb;DB_CLOSE_ON_EXIT=FALSE;AUTO_RECONNECT=TRUE

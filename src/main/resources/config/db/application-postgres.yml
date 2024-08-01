@@ -1,5 +1,10 @@
 # Run `docker compose up` in root of project to start postgres with pgvector
 
+config:
+  db:
+    postgres:
+      enabled: true
+
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/postgres

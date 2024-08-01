@@ -1,3 +1,20 @@
 spring:
   config:
-    import: "classpath:config/db/application-postgres.yml"
+    import:
+      - "classpath:config/db/application-postgres.yml"
+      - "classpath:config/security/application-auth.yml"
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,loggers,threaddump,httptrace,prometheus
+  endpoint:
+    shutdown:
+      enabled: false
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true

@@ -6,13 +6,13 @@ import dev.langchain4j.model.embedding.EmbeddingModel
 import dev.langchain4j.store.embedding.EmbeddingStore
 import dev.langchain4j.store.embedding.pgvector.PgVectorEmbeddingStore
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Profile
 
 
 @Configuration
-@Profile("prod", "dev")
+@ConditionalOnProperty(name = ["config.db.postgres.enabled"], havingValue = "true")
 class PostgresEmbeddingConfig {
     @Autowired
     private lateinit var postgresProperties: PostgresProperties

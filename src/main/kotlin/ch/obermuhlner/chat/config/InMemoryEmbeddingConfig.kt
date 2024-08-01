@@ -5,14 +5,14 @@ import dev.langchain4j.model.embedding.AllMiniLmL6V2EmbeddingModel
 import dev.langchain4j.model.embedding.EmbeddingModel
 import dev.langchain4j.store.embedding.EmbeddingStore
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Profile
 
 
 @Configuration
-@Profile("test")
-class InmemoryEmbeddingConfig {
+@ConditionalOnProperty(name = ["config.db.h2-memory.enabled"], havingValue = "true")
+class InMemoryEmbeddingConfig {
     @Bean
     fun embeddingModel(): EmbeddingModel {
         return AllMiniLmL6V2EmbeddingModel()

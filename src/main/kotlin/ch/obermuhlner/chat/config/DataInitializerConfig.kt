@@ -1,17 +1,23 @@
 package ch.obermuhlner.chat.config
 
-import org.springframework.boot.ApplicationRunner
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
 import ch.obermuhlner.chat.entity.AssistantEntity
 import ch.obermuhlner.chat.entity.ChatEntity
 import ch.obermuhlner.chat.model.Tool
+import ch.obermuhlner.chat.model.User
 import ch.obermuhlner.chat.repository.AssistantRepository
 import ch.obermuhlner.chat.repository.ChatRepository
 import ch.obermuhlner.chat.service.ChatService.Companion.NO_ANSWER
+import ch.obermuhlner.chat.service.UserService
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.ApplicationRunner
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
 
 @Configuration
-class DataInitializerConfig {
+class DataInitializerConfig(
+    @Value("\${admin.username}") val adminUsername: String,
+    @Value("\${admin.password}") val adminPassword: String,
+) {
 
     companion object {
         val CHAT_TITLE_GENERIC = "Generic Chat"
@@ -21,8 +27,18 @@ class DataInitializerConfig {
     }
 
     @Bean
-    fun dataInitializer(assistantRepository: AssistantRepository, chatRepository: ChatRepository): ApplicationRunner {
+    fun dataInitializer(userService: UserService, assistantRepository: AssistantRepository, chatRepository: ChatRepository): ApplicationRunner {
         return ApplicationRunner {
+            if (userService.findAll().isEmpty()) {
+                userService.create(
+                    User(
+                        id = null,
+                        username = adminUsername,
+                        password = adminPassword,
+                    )
+                )
+            }
+
             if (assistantRepository.count() == 0L) {
                 val chatGeneric = chatRepository.save(ChatEntity().apply {
                     title = CHAT_TITLE_GENERIC

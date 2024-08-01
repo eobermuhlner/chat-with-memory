@@ -1,0 +1,4 @@
+config:
+  security:
+    auth:
+      enabled: true

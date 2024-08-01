@@ -1,3 +1,16 @@
 spring:
   config:
-    import: "classpath:config/db/application-postgres.yml"
+    import:
+      - "classpath:config/db/application-h2-memory.yml"
+#      - "classpath:config/db/application-h2-file.yml"
+#      - "classpath:config/db/application-postgres.yml"
+      - "classpath:config/security/application-auth.yml"
+#      - "classpath:config/security/application-noauth.yml"
+      - "classpath:config/misc/application-debug.yml"
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"

@@ -1,0 +1,11 @@
+config:
+  db:
+    h2-memory:
+      enabled: true
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:chatdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
