@@ -130,7 +130,7 @@ fun User.toUserEntity(userEntity: UserEntity = UserEntity(), roleRepository: Rol
             password = this@toUserEntity.password
         }
         prompt = this@toUserEntity.prompt
-        openApiKey = this@toUserEntity.password
+        openApiKey = this@toUserEntity.openApiKey
         roles = this@toUserEntity.roles.mapNotNull { role ->
             roleRepository.findByName(role)
         }.toMutableSet()

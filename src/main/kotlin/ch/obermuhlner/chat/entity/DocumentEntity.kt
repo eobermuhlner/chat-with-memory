@@ -25,7 +25,7 @@ class DocumentEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    var user: UserEntity? = null
+    lateinit var user: UserEntity
 
     @ManyToMany(mappedBy = "documents")
     var assistants: MutableSet<AssistantEntity> = mutableSetOf()

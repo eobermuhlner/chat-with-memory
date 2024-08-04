@@ -28,7 +28,7 @@ class DocumentService @Autowired constructor(
             data = file.bytes
             user = userEntity
         }
-        val savedDocument = documentRepository.save(documentEntity).toDocument()!!
+        val savedDocument = documentRepository.save(documentEntity).toDocument()
         documentRetrievalService.addDocument(documentEntity, splitterStrategy)
         return savedDocument
     }

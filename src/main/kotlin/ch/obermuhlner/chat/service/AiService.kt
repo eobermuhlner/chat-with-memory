@@ -9,20 +9,15 @@ import org.springframework.stereotype.Service
 
 @Service
 class AiService(
-    @Value("\${openai.api-key:demo}") private val openAiApiKey: String,
     private val toolService: ToolService,
 ) {
     interface AiChat {
         fun generate(prompt: String): String
     }
 
-    private val model = OpenAiChatModel.builder()
-        .apiKey(openAiApiKey)
-        //.modelName(OpenAiChatModelName.GPT_3_5_TURBO)
-        .modelName(OpenAiChatModelName.GPT_4_O)
-        .build()
+    fun generate(prompt: String, openAiApiKey: String): String {
+        val model = getModel(openAiApiKey)
 
-    fun generate(prompt: String): String {
         println("=================================================================")
         println("PROMPT:")
         println(prompt)
@@ -32,14 +27,29 @@ class AiService(
         return model.generate(prompt)
     }
 
-    fun generateWithTools(prompt: String, tools: Collection<Tool>): String {
+    fun generateWithTools(prompt: String, tools: Collection<Tool>, openAiApiKey: String): String {
         val toolInstances = toolService.getToolInstances(tools)
 
         val aiChat = AiServices.builder(AiChat::class.java)
-            .chatLanguageModel(model)
+            .chatLanguageModel(getModel(openAiApiKey))
             .tools(toolInstances)
             .build()
 
         return aiChat.generate(prompt)
+    }
+
+    private fun getModel(openAiApiKey: String): OpenAiChatModel {
+        val key = openAiApiKey.ifBlank { "demo" }
+
+        val name = if (key == "demo") {
+            OpenAiChatModelName.GPT_3_5_TURBO
+        } else {
+            OpenAiChatModelName.GPT_4_O
+        }
+
+        return OpenAiChatModel.builder()
+            .apiKey(key)
+            .modelName(name)
+            .build()
     }
 }

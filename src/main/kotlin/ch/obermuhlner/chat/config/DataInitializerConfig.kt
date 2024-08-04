@@ -55,7 +55,7 @@ class DataInitializerConfig(
                     roles.add(adminRole)
                 })
             } else {
-                userRepository.findByUsername(adminUsername)
+                userRepository.findByUsername(adminUsername)!!
             }
 
             if (assistantRepository.count() == 0L) {

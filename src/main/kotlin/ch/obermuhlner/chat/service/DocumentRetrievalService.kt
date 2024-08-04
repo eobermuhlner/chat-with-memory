@@ -18,7 +18,6 @@ import java.io.ByteArrayInputStream
 class DocumentRetrievalService(
     private val embeddingModel: EmbeddingModel,
     private val documentEmbeddingStore: EmbeddingStore<TextSegment>,
-    @Value("\${openai.api-key:demo}") private val openAiApiKey: String,
 ) {
     companion object {
         private const val METADATA_FILENAME = "filename"
@@ -30,10 +29,10 @@ class DocumentRetrievalService(
         val document = parser.parse(ByteArrayInputStream(documentEntity.data))
         document.metadata().put(METADATA_FILENAME, documentEntity.name)
         document.metadata().put(METADATA_DOCUMENT_ID, documentEntity.id!!)
-        addDocument(document, splitterStrategy)
+        addDocument(document, splitterStrategy, documentEntity.user.openApiKey.ifBlank { "demo" })
     }
 
-    private fun addDocument(document: Document, splitterStrategy: SplitterStrategy) {
+    private fun addDocument(document: Document, splitterStrategy: SplitterStrategy, openAiApiKey: String) {
         val splitter = when (splitterStrategy) {
             SplitterStrategy.Paragraph -> DocumentByParagraphSplitter(2000, 0)
             SplitterStrategy.AI -> AiDocumentSplitter(openAiApiKey)

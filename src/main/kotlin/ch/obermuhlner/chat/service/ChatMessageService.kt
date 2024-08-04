@@ -4,6 +4,7 @@ import ch.obermuhlner.chat.entity.AssistantEntity
 import ch.obermuhlner.chat.entity.ChatEntity
 import ch.obermuhlner.chat.entity.ChatMessageEntity
 import ch.obermuhlner.chat.entity.LongTermSummaryEntity
+import ch.obermuhlner.chat.entity.UserEntity
 import ch.obermuhlner.chat.model.ChatMessage
 import ch.obermuhlner.chat.model.ChatResponse
 import ch.obermuhlner.chat.model.MessageType
@@ -97,7 +98,7 @@ class ChatMessageService(
             val context = createContext(chat, assistant, userMessage, relevantMessagesText, relevantDocumentSegmentsText)
             val tools = chat.tools.toMutableSet()
             tools.addAll(assistant.tools)
-            val answer = aiService.generateWithTools(context, tools)
+            val answer = aiService.generateWithTools(context, tools, chat.user.openApiKey)
             if (answer.isNotBlank() && !answer.startsWith(NO_ANSWER)) {
                 val assistantMessage = ChatMessageEntity().apply {
                     this.chat = chat
@@ -132,6 +133,8 @@ class ChatMessageService(
 
     private fun createContext(chat: ChatEntity, assistant: AssistantEntity, userMessage: ChatMessageEntity, relevantMessagesText: String, relevantDocumentSegmentsText: String): String {
 
+        val user = chat.user ?: UserEntity()
+
         var shortTermMessages = chatMessageRepository.findAllShortTermMemory(chat)
         val shortTermCount = shortTermMessages.count()
         if (shortTermCount > properties.maxMessageCount) {
@@ -154,10 +157,13 @@ class ChatMessageService(
             |## Chat: ${chat.title}
             |${chat.prompt}
             |
-            |## Assistant
+            |## User: ${user.username}
+            |${user.prompt}
+            |
+            |## Assistant: ${assistant.name} - ${assistant.description}
             |${assistant.prompt}
             |
-            |## Relevant messages
+            |## Relevant previous messages
             |$relevantMessagesText
             |
             |## Relevant documents
@@ -187,7 +193,7 @@ class ChatMessageService(
 
     private fun summarize(chatEntity: ChatEntity, messagesToSummarize: List<ChatMessageEntity>) {
         val prompt = createSummaryPrompt(messagesToSummarize.joinToString("\n") { it.toChatString() })
-        val summary = aiService.generate(prompt)
+        val summary = aiService.generate(chatEntity.user.openApiKey, prompt)
         addSummary(chatEntity, 0, summary)
     }
 
@@ -208,7 +214,8 @@ class ChatMessageService(
         while (levelSummaries.size > properties.minMessageCount) {
             messagesToSummarize.add(longTermSummaryRepository.deleteAndGet(levelSummaries))
         }
-        val summaryText = aiService.generate(createSummaryPrompt(messagesToSummarize.joinToString("\n") { it.text }))
+        val prompt = createSummaryPrompt(messagesToSummarize.joinToString("\n") { it.text })
+        val summaryText = aiService.generate(prompt, chatEntity.user.openApiKey)
         addSummary(chatEntity, level + 1, summaryText)
     }
 

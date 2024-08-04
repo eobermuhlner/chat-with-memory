@@ -36,7 +36,7 @@ class ChatEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    var user: UserEntity? = null
+    lateinit var user: UserEntity
 
     @Column(name = "tools")
     @Convert(converter = ToolListConverter::class)
