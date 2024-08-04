@@ -8,15 +8,14 @@ import ch.obermuhlner.chat.repository.AssistantRepository
 import ch.obermuhlner.chat.repository.ChatRepository
 import ch.obermuhlner.chat.repository.DocumentRepository
 import jakarta.persistence.EntityNotFoundException
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import kotlin.jvm.optionals.getOrNull
 
 @Service
 class ChatService(
+    private val authService: AuthService,
     private val chatRepository: ChatRepository,
     private val assistantRepository: AssistantRepository,
     private val documentRepository: DocumentRepository,
@@ -36,17 +35,28 @@ class ChatService(
     }
 
     @Transactional(readOnly = true)
-    fun findAll(): List<Chat> = chatRepository.findAll().map { it.toChat() }
+    fun findAll(): List<Chat> {
+        val userId = authService.getCurrentUserId()
+
+        return chatRepository.findAllByUserId(userId).map { it.toChat() }
+    }
 
     @Transactional(readOnly = true)
-    fun findById(id: Long): Chat? = chatRepository.findByIdOrNull(id)?.toChat()
+    fun findById(id: Long): Chat? {
+        val userId = authService.getCurrentUserId()
+
+        return chatRepository.findByUserIdAndId(userId, id)?.toChat()
+    }
 
     @Transactional
     fun create(chat: Chat): Chat {
+        val user = authService.getCurrentUserEntity()
+
         if (chat.id != null) {
             throw IllegalArgumentException("Cannot create chat with id")
         }
         val chatEntity = chat.toChatEntity()
+        chatEntity.user = user
         fillAssistants(chatEntity, chat.assistants)
         fillDocuments(chatEntity, chat.documents)
 
@@ -56,7 +66,9 @@ class ChatService(
 
     @Transactional
     fun update(chat: Chat): Chat {
-        val existingEntity = chatRepository.findById(chat.id!!).getOrNull() ?: throw IllegalArgumentException("Chat not found: ${chat.id}")
+        val userId = authService.getCurrentUserId()
+
+        val existingEntity = chatRepository.findByUserIdAndId(userId, chat.id!!) ?: throw IllegalArgumentException("Chat not found: ${chat.id}")
 
         chat.toChatEntity(existingEntity)
         fillAssistants(existingEntity, chat.assistants)
@@ -92,7 +104,9 @@ class ChatService(
 
     @Transactional
     fun deleteById(id: Long) {
-        val chat = chatRepository.findById(id).orElseThrow { EntityNotFoundException("Chat not found: $id") }
+        val userId = authService.getCurrentUserId()
+
+        val chat = chatRepository.findByUserIdAndId(userId, id) ?: throw EntityNotFoundException("Chat not found: $id")
 
         // Clear the relationship with assistants
         for (assistant in chat.assistants) {

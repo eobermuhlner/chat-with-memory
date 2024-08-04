@@ -1,11 +1,13 @@
 package ch.obermuhlner.chat.service
 
+import ch.obermuhlner.chat.entity.UserEntity
 import ch.obermuhlner.chat.model.User
 import ch.obermuhlner.chat.repository.RoleRepository
 import ch.obermuhlner.chat.repository.UserRepository
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.core.userdetails.UsernameNotFoundException

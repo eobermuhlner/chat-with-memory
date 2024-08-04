@@ -14,16 +14,19 @@ import kotlin.jvm.optionals.getOrNull
 
 @Service
 class DocumentService @Autowired constructor(
+    private val authService: AuthService,
     private val documentRepository: DocumentRepository,
     private val assistantRepository: AssistantRepository,
     private val documentRetrievalService: DocumentRetrievalService,
 ) {
 
     fun saveDocument(file: MultipartFile, splitterStrategy: SplitterStrategy): Document {
+        val userEntity = authService.getCurrentUserEntity()
         val documentEntity = DocumentEntity().apply {
             name = file.originalFilename ?: "Unnamed"
             type = file.contentType ?: "application/octet-stream"
             data = file.bytes
+            user = userEntity
         }
         val savedDocument = documentRepository.save(documentEntity).toDocument()!!
         documentRetrievalService.addDocument(documentEntity, splitterStrategy)
@@ -31,9 +34,9 @@ class DocumentService @Autowired constructor(
     }
 
     fun getDocument(id: Long): Document? {
+        val userId = authService.getCurrentUserId()
         return documentRepository
-            .findById(id)
-            .getOrNull()
+            .findByUserIdAndId(userId, id)
             ?.toDocument()
     }
 
@@ -44,7 +47,8 @@ class DocumentService @Autowired constructor(
     }
 
     fun deleteDocument(id: Long) {
-        val document = documentRepository.findById(id).orElseThrow { EntityNotFoundException("Document not found: $id") }
+        val userId = authService.getCurrentUserId()
+        val document = documentRepository.findByUserIdAndId(userId, id) ?: EntityNotFoundException("Document not found: $id")
 
         // Remove the document from all assistants
         val assistants = assistantRepository.findAll()

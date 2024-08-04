@@ -1,11 +1,14 @@
 package ch.obermuhlner.chat.entity
 
 import jakarta.persistence.Entity
+import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
 import jakarta.persistence.Lob
 import jakarta.persistence.ManyToMany
+import jakarta.persistence.ManyToOne
 
 @Entity
 class DocumentEntity {
@@ -19,6 +22,10 @@ class DocumentEntity {
 
     @Lob
     var data: ByteArray = byteArrayOf()
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    var user: UserEntity? = null
 
     @ManyToMany(mappedBy = "documents")
     var assistants: MutableSet<AssistantEntity> = mutableSetOf()

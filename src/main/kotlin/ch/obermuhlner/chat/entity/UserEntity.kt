@@ -15,6 +15,20 @@ class UserEntity {
     @Column(nullable = false)
     var password: String = ""
 
+    @Column(length = 4000)
+    var prompt: String = ""
+
+    var openApiKey: String = ""
+
+    @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+    val assistants: List<AssistantEntity> = mutableListOf()
+
+    @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+    val chats: List<ChatEntity> = mutableListOf()
+
+    @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+    val documents: List<DocumentEntity> = mutableListOf()
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "user_roles",

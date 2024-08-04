@@ -18,7 +18,9 @@ import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
+import org.springframework.security.web.access.AccessDeniedHandler
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
+import org.springframework.security.web.AuthenticationEntryPoint
 
 @Configuration
 @EnableWebSecurity
@@ -27,6 +29,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 class AuthSecurityConfig(
     @Autowired private val userDetailsService: UserDetailsService,
     @Autowired private val environment: Environment,
+    @Autowired private val accessDeniedHandler: AccessDeniedHandler,
+    @Autowired private val authenticationEntryPoint: AuthenticationEntryPoint
 ) {
     @Bean
     fun authenticationManager(): AuthenticationManager {
@@ -50,15 +54,19 @@ class AuthSecurityConfig(
             .authorizeHttpRequests { authz ->
                 authz
                     .requestMatchers("/login").permitAll()
-                    if (environment.activeProfiles.contains("dev")) {
-                        authz.requestMatchers("/actuator/**").permitAll()
-                    } else {
-                        authz.requestMatchers("/actuator/health", "/actuator/info").permitAll()
-                    }
+                if (environment.activeProfiles.contains("dev")) {
+                    authz.requestMatchers("/actuator/**").permitAll()
+                } else {
+                    authz.requestMatchers("/actuator/health", "/actuator/info").permitAll()
+                }
                     .anyRequest().authenticated()
             }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .addFilterBefore(jwtRequestFilter(), UsernamePasswordAuthenticationFilter::class.java)
+            .exceptionHandling { exceptionHandling ->
+                exceptionHandling.accessDeniedHandler(accessDeniedHandler)
+                exceptionHandling.authenticationEntryPoint(authenticationEntryPoint)
+            }
 
         return http.build()
     }

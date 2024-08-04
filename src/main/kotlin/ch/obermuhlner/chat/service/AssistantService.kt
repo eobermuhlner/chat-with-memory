@@ -8,13 +8,12 @@ import ch.obermuhlner.chat.repository.ChatMessageRepository
 import ch.obermuhlner.chat.repository.ChatRepository
 import ch.obermuhlner.chat.repository.DocumentRepository
 import jakarta.persistence.EntityNotFoundException
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import kotlin.jvm.optionals.getOrNull
 
 @Service
 class AssistantService(
+    private val authService: AuthService,
     private val assistantRepository: AssistantRepository,
     private val chatRepository: ChatRepository,
     private val chatMessageRepository: ChatMessageRepository,
@@ -22,17 +21,25 @@ class AssistantService(
 ) {
 
     @Transactional(readOnly = true)
-    fun findAll(): List<Assistant> = assistantRepository.findAll().map { it.toAssistant() }
+    fun findAll(): List<Assistant> {
+        val userId = authService.getCurrentUserId()
+        return assistantRepository.findAllByUserId(userId).map { it.toAssistant() }
+    }
 
     @Transactional(readOnly = true)
-    fun findById(id: Long): Assistant? = assistantRepository.findByIdOrNull(id)?.toAssistant()
+    fun findById(id: Long): Assistant? {
+        val userId = authService.getCurrentUserId()
+        return assistantRepository.findByUserIdAndId(userId, id)?.toAssistant()
+    }
 
     @Transactional
     fun create(assistant: Assistant): Assistant {
+        val user = authService.getCurrentUserEntity()
         if (assistant.id != null) {
             throw IllegalArgumentException("Cannot create assistant with id")
         }
         val assistantEntity = assistant.toAssistantEntity()
+        assistantEntity.user = user
         fillDocuments(assistantEntity, assistant.documents)
         val savedEntity = assistantRepository.save(assistantEntity)
 
@@ -41,7 +48,8 @@ class AssistantService(
 
     @Transactional
     fun update(assistant: Assistant): Assistant {
-        val existingEntity = assistantRepository.findById(assistant.id!!).getOrNull() ?: throw IllegalArgumentException("Assistant not found: ${assistant.id}")
+        val userId = authService.getCurrentUserId()
+        val existingEntity = assistantRepository.findByUserIdAndId(userId, assistant.id!!) ?: throw IllegalArgumentException("Assistant not found: ${assistant.id}")
         assistant.toAssistantEntity(existingEntity)
 
         fillDocuments(existingEntity, assistant.documents)
@@ -64,7 +72,8 @@ class AssistantService(
 
     @Transactional
     fun deleteById(id: Long, deleteMessage: Boolean) {
-        val assistant = assistantRepository.findById(id).orElseThrow { EntityNotFoundException("Assistant not found: $id") }
+        val userId = authService.getCurrentUserId()
+        val assistant = assistantRepository.findByUserIdAndId(userId, id) ?: throw EntityNotFoundException("Assistant not found: $id")
 
         if (deleteMessage) {
             chatMessageRepository.deleteAllBySender(assistant)

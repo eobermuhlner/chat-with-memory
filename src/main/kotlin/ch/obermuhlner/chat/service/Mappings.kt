@@ -116,6 +116,8 @@ fun UserEntity.toUser(): User {
         id = this.id,
         username = this.username,
         password = "",
+        prompt = this.prompt,
+        openApiKey = this.openApiKey,
         roles = this.roles.map { it.name },
     )
 }
@@ -127,6 +129,8 @@ fun User.toUserEntity(userEntity: UserEntity = UserEntity(), roleRepository: Rol
         if (!keepExistingPassword) {
             password = this@toUserEntity.password
         }
+        prompt = this@toUserEntity.prompt
+        openApiKey = this@toUserEntity.password
         roles = this@toUserEntity.roles.mapNotNull { role ->
             roleRepository.findByName(role)
         }.toMutableSet()

@@ -5,13 +5,11 @@ import ch.obermuhlner.chat.entity.ChatEntity
 import ch.obermuhlner.chat.entity.RoleEntity
 import ch.obermuhlner.chat.entity.UserEntity
 import ch.obermuhlner.chat.model.Tool
-import ch.obermuhlner.chat.model.User
 import ch.obermuhlner.chat.repository.AssistantRepository
 import ch.obermuhlner.chat.repository.ChatRepository
 import ch.obermuhlner.chat.repository.RoleRepository
 import ch.obermuhlner.chat.repository.UserRepository
 import ch.obermuhlner.chat.service.ChatService.Companion.NO_ANSWER
-import ch.obermuhlner.chat.service.UserService
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.ApplicationRunner
 import org.springframework.context.annotation.Bean
@@ -49,13 +47,15 @@ class DataInitializerConfig(
                 })
             }
 
-            if (userRepository.count() == 0L) {
+            val adminUser = if (userRepository.findByUsername(adminUsername) == null) {
                 val adminRole = roleRepository.findByName("ROLE_ADMIN")!!
                 userRepository.save(UserEntity().apply {
                     username = adminUsername
                     password = passwordEncoder.encode(adminPassword)
                     roles.add(adminRole)
                 })
+            } else {
+                userRepository.findByUsername(adminUsername)
             }
 
             if (assistantRepository.count() == 0L) {
@@ -66,6 +66,7 @@ class DataInitializerConfig(
                         
                         If you have no relevant answer or the answer was already given, respond with $NO_ANSWER.
                     """.trimIndent()
+                    user = adminUser
                 })
 
                 val chatHealth = chatRepository.save(ChatEntity().apply {
@@ -75,6 +76,7 @@ class DataInitializerConfig(
                         
                         If you have no relevant answer or the answer was already given, respond with $NO_ANSWER.
                     """.trimIndent()
+                    user = adminUser
                 })
 
                 val chatSoftwareDevelopment = chatRepository.save(ChatEntity().apply {
@@ -93,6 +95,7 @@ class DataInitializerConfig(
                         
                         If you have no relevant answer or the answer was already given, respond with $NO_ANSWER.
                     """.trimIndent()
+                    user = adminUser
                 })
 
                 val chatAstronomy = chatRepository.save(ChatEntity().apply {
@@ -102,6 +105,7 @@ class DataInitializerConfig(
                         
                         If you have no relevant answer or the answer was already given, respond with $NO_ANSWER.
                     """.trimIndent()
+                    user = adminUser
                 })
 
 
@@ -114,6 +118,7 @@ class DataInitializerConfig(
                     """.trimIndent()
                     sortIndex = 30
                     chats.add(chatSoftwareDevelopment)
+                    user = adminUser
                 })
 
                 assistantRepository.save(AssistantEntity().apply {
@@ -128,6 +133,7 @@ class DataInitializerConfig(
                     """.trimIndent()
                     sortIndex = 80
                     chats.add(chatHealth)
+                    user = adminUser
                 })
 
                 assistantRepository.save(AssistantEntity().apply {
@@ -144,6 +150,7 @@ class DataInitializerConfig(
                     """.trimIndent()
                     sortIndex = 90
                     chats.add(chatHealth)
+                    user = adminUser
                 })
 
                 assistantRepository.save(AssistantEntity().apply {
@@ -161,6 +168,7 @@ class DataInitializerConfig(
                     """.trimIndent()
                     sortIndex = 90
                     chats.add(chatSoftwareDevelopment)
+                    user = adminUser
                 })
 
                 assistantRepository.save(AssistantEntity().apply {
@@ -174,6 +182,7 @@ class DataInitializerConfig(
                     sortIndex = 90
                     tools = listOf(Tool.News)
                     chats.add(chatGeneric)
+                    user = adminUser
                 })
 
                 assistantRepository.save(AssistantEntity().apply {
@@ -186,7 +195,7 @@ class DataInitializerConfig(
                     """.trimIndent()
                     sortIndex = 90
                     tools = listOf(Tool.News)
-                    //chats.add(chatGeneric)
+                    user = adminUser
                 })
 
                 assistantRepository.save(AssistantEntity().apply {
@@ -199,6 +208,7 @@ class DataInitializerConfig(
                     sortIndex = 50
                     tools = listOf(Tool.Weather)
                     chats.add(chatAstronomy)
+                    user = adminUser
                 })
 
                 assistantRepository.save(AssistantEntity().apply {
@@ -211,6 +221,7 @@ class DataInitializerConfig(
                     """.trimIndent()
                     sortIndex = 50
                     chats.add(chatAstronomy)
+                    user = adminUser
                 })
             }
         }

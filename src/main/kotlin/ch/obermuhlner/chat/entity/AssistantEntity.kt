@@ -4,12 +4,14 @@ import ch.obermuhlner.chat.model.Tool
 import jakarta.persistence.Column
 import jakarta.persistence.Convert
 import jakarta.persistence.Entity
+import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.JoinTable
 import jakarta.persistence.ManyToMany
+import jakarta.persistence.ManyToOne
 
 @Entity
 class AssistantEntity {
@@ -25,6 +27,10 @@ class AssistantEntity {
     var prompt: String = ""
 
     var sortIndex: Int = 50
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    var user: UserEntity? = null
 
     @ManyToMany
     @JoinTable(
