@@ -118,7 +118,7 @@ fun UserEntity.toUser(): User {
         password = "",
         prompt = this.prompt,
         openApiKey = this.openApiKey,
-        roles = this.roles.map { it.name },
+        roles = this.roles.map { it.name }.toMutableList(),
     )
 }
 

@@ -2,8 +2,9 @@ package ch.obermuhlner.chat.controller
 
 import ch.obermuhlner.chat.auth.JwtUtil
 import ch.obermuhlner.chat.model.JwtRequest
+import ch.obermuhlner.chat.model.User
+import ch.obermuhlner.chat.service.UserService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -19,7 +20,8 @@ import org.springframework.web.bind.annotation.RestController
 @ConditionalOnProperty(name = ["config.security.auth.enabled"], havingValue = "true")
 class AuthController(
     @Autowired private val authenticationManager: AuthenticationManager,
-    @Autowired private val userDetailsService: UserDetailsService
+    @Autowired private val userDetailsService: UserDetailsService,
+    @Autowired private val userService: UserService,
 ) {
 
     @GetMapping("/login-required")
@@ -41,6 +43,17 @@ class AuthController(
         val jwt = JwtUtil.generateToken(userDetails.username, userDetails.authorities.map { it.authority })
 
         return ResponseEntity.ok(mapOf("token" to jwt))
+    }
+
+    @PostMapping("/register")
+    fun register(@RequestBody user: User): ResponseEntity<User> {
+        val createdUser = userService.register(user)
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdUser)
+    }
+
+    @GetMapping("/current")
+    fun findCurrentUser(): User? {
+        return userService.currentUser()
     }
 }
 

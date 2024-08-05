@@ -6,5 +6,5 @@ data class User(
     var password: String,
     var prompt: String = "",
     var openApiKey: String = "",
-    val roles: List<String> = mutableListOf()
+    val roles: MutableList<String> = mutableListOf()
 )

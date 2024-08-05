@@ -53,12 +53,14 @@ class AuthSecurityConfig(
             .csrf { csrf -> csrf.disable() }
             .authorizeHttpRequests { authz ->
                 authz
-                    .requestMatchers("/login").permitAll()
-                if (environment.activeProfiles.contains("dev")) {
-                    authz.requestMatchers("/actuator/**").permitAll()
-                } else {
-                    authz.requestMatchers("/actuator/health", "/actuator/info").permitAll()
-                }
+                    .requestMatchers("/login", "/login-required", "/register").permitAll()
+                    .requestMatchers("/roles").hasRole("ADMIN")
+                    .requestMatchers("/users/**").hasRole("ADMIN")
+                    if (environment.activeProfiles.contains("dev")) {
+                        authz.requestMatchers("/actuator/**").permitAll()
+                    } else {
+                        authz.requestMatchers("/actuator/health", "/actuator/info").permitAll()
+                    }
                     .anyRequest().authenticated()
             }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }

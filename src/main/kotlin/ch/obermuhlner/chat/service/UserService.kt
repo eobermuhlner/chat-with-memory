@@ -17,8 +17,9 @@ import org.springframework.transaction.annotation.Transactional
 import kotlin.jvm.optionals.getOrNull
 
 @Service
-@PreAuthorize("hasRole('ROLE_ADMIN')")
+//@PreAuthorize("hasRole('ROLE_ADMIN')")
 class UserService(
+    private val authService: AuthService,
     private val userRepository: UserRepository,
     private val roleRepository: RoleRepository,
     private val passwordEncoder: PasswordEncoder
@@ -29,6 +30,20 @@ class UserService(
 
     @Transactional(readOnly = true)
     fun findById(id: Long): User? = userRepository.findByIdOrNull(id)?.toUser()
+
+    //@PreAuthorize("isAuthenticated()")
+    @Transactional(readOnly = true)
+    fun currentUser(): User? {
+        val user = authService.getCurrentUserEntity()
+        return user.toUser()
+    }
+
+    //@PreAuthorize("permitAll()")
+    @Transactional
+    fun register(user: User): User? {
+        user.roles.clear()
+        return create(user)
+    }
 
     @Transactional
     fun create(user: User): User {
