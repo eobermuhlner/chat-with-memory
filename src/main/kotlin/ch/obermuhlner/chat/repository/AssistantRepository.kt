@@ -7,4 +7,5 @@ interface AssistantRepository : JpaRepository<AssistantEntity, Long> {
 
     fun findAllByUserId(userId: Long): List<AssistantEntity>
     fun findByUserIdAndId(userId: Long, id: Long): AssistantEntity?
+    fun findAllByIsTemplate(isTemplate: Boolean): List<AssistantEntity>
 }

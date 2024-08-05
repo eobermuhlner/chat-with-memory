@@ -2,6 +2,8 @@ package ch.obermuhlner.chat.service
 
 import ch.obermuhlner.chat.entity.UserEntity
 import ch.obermuhlner.chat.model.User
+import ch.obermuhlner.chat.repository.AssistantRepository
+import ch.obermuhlner.chat.repository.ChatRepository
 import ch.obermuhlner.chat.repository.RoleRepository
 import ch.obermuhlner.chat.repository.UserRepository
 import jakarta.persistence.EntityNotFoundException
@@ -17,11 +19,12 @@ import org.springframework.transaction.annotation.Transactional
 import kotlin.jvm.optionals.getOrNull
 
 @Service
-//@PreAuthorize("hasRole('ROLE_ADMIN')")
 class UserService(
     private val authService: AuthService,
     private val userRepository: UserRepository,
     private val roleRepository: RoleRepository,
+    private val chatRepository: ChatRepository,
+    private val assistantRepository: AssistantRepository,
     private val passwordEncoder: PasswordEncoder
 ) {
 
@@ -31,14 +34,12 @@ class UserService(
     @Transactional(readOnly = true)
     fun findById(id: Long): User? = userRepository.findByIdOrNull(id)?.toUser()
 
-    //@PreAuthorize("isAuthenticated()")
     @Transactional(readOnly = true)
     fun currentUser(): User? {
         val user = authService.getCurrentUserEntity()
         return user.toUser()
     }
 
-    //@PreAuthorize("permitAll()")
     @Transactional
     fun register(user: User): User? {
         user.roles.clear()
@@ -52,6 +53,31 @@ class UserService(
         }
         val userEntity = user.toUserEntity(roleRepository = roleRepository)
         userEntity.password = passwordEncoder.encode(user.password)
+
+        val templateChats = chatRepository.findAllByIsTemplate(true)
+        val savedChats = chatRepository.saveAll(templateChats.map {
+            it.toChat().toChatEntity().apply {
+                id = null
+                assistants.clear()
+                documents.clear()
+            }
+        })
+
+        val templateAssistants = assistantRepository.findAllByIsTemplate(true)
+        val savedAssistants = assistantRepository.saveAll(templateAssistants.map {
+            it.toAssistant().toAssistantEntity().apply {
+                id = null
+            }
+        })
+
+        savedChats.forEach {
+            it.user = userEntity
+            userEntity.chats.add(it)
+        }
+        savedAssistants.forEach {
+            it.user = userEntity
+            userEntity.assistants.add(it)
+        }
 
         val savedEntity = userRepository.save(userEntity)
 

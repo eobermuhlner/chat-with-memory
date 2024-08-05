@@ -51,6 +51,7 @@ fun ChatEntity.toChat(): Chat {
         id = this.id,
         title = this.title,
         prompt = this.prompt,
+        isTemplate = this.isTemplate,
         assistants = this.assistants.map { it.toAssistant() }.toMutableList(),
         documents = this.documents.map { it.toDocument() }.toMutableList(),
         tools = this.tools.map { it.name }
@@ -62,6 +63,7 @@ fun Chat.toChatEntity(chatEntity: ChatEntity = ChatEntity()): ChatEntity {
         id = this@toChatEntity.id
         title = this@toChatEntity.title
         prompt = this@toChatEntity.prompt
+        isTemplate = this@toChatEntity.isTemplate
         tools = this@toChatEntity.tools.mapNotNull {
             try {
                 Tool.valueOf(it)
@@ -80,6 +82,7 @@ fun AssistantEntity.toAssistant(): Assistant {
         description = this.description,
         prompt = this.prompt,
         sortIndex = this.sortIndex,
+        isTemplate = this.isTemplate,
         tools = this.tools.map { it.name },
         documents = this.documents.map { it.toDocument() }
     )
@@ -92,6 +95,7 @@ fun Assistant.toAssistantEntity(assistantEntity: AssistantEntity = AssistantEnti
         description = this@toAssistantEntity.description
         prompt = this@toAssistantEntity.prompt
         sortIndex = this@toAssistantEntity.sortIndex
+        isTemplate = this@toAssistantEntity.isTemplate
         tools = this@toAssistantEntity.tools.mapNotNull {
             try {
                 Tool.valueOf(it)

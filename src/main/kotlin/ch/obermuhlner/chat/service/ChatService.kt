@@ -30,7 +30,8 @@ class ChatService(
             id = null,
             title = "Chat $now",
             prompt = "If you have no relevant answer or the answer was already given, respond with $NO_ANSWER.",
-            assistants = mutableListOf()
+            assistants = mutableListOf(),
+            isTemplate = false
         )
     }
 
@@ -57,6 +58,9 @@ class ChatService(
         }
         val chatEntity = chat.toChatEntity()
         chatEntity.user = user
+        if (!authService.isCurrentUserInRole("ROLE_TEMPLATE")) {
+            chatEntity.isTemplate = false
+        }
         fillAssistants(chatEntity, chat.assistants)
         fillDocuments(chatEntity, chat.documents)
 
@@ -71,6 +75,9 @@ class ChatService(
         val existingEntity = chatRepository.findByUserIdAndId(userId, chat.id!!) ?: throw IllegalArgumentException("Chat not found: ${chat.id}")
 
         chat.toChatEntity(existingEntity)
+        if (!authService.isCurrentUserInRole("ROLE_TEMPLATE")) {
+            existingEntity.isTemplate = false
+        }
         fillAssistants(existingEntity, chat.assistants)
         fillDocuments(existingEntity, chat.documents)
 

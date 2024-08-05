@@ -28,6 +28,8 @@ class AssistantEntity {
 
     var sortIndex: Int = 50
 
+    var isTemplate: Boolean = false
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     var user: UserEntity? = null

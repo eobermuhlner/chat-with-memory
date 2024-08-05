@@ -8,5 +8,6 @@ interface ChatRepository : JpaRepository<ChatEntity, Long> {
 
     fun findAllByUserId(userId: Long): List<ChatEntity>
     fun findByUserIdAndId(userId: Long, id: Long): ChatEntity?
+    fun findAllByIsTemplate(isTemplate: Boolean): List<ChatEntity>
 
 }

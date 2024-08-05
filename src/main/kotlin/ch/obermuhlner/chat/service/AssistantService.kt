@@ -40,6 +40,9 @@ class AssistantService(
         }
         val assistantEntity = assistant.toAssistantEntity()
         assistantEntity.user = user
+        if (!authService.isCurrentUserInRole("ROLE_TEMPLATE")) {
+            assistantEntity.isTemplate = false
+        }
         fillDocuments(assistantEntity, assistant.documents)
         val savedEntity = assistantRepository.save(assistantEntity)
 
@@ -52,6 +55,9 @@ class AssistantService(
         val existingEntity = assistantRepository.findByUserIdAndId(userId, assistant.id!!) ?: throw IllegalArgumentException("Assistant not found: ${assistant.id}")
         assistant.toAssistantEntity(existingEntity)
 
+        if (!authService.isCurrentUserInRole("ROLE_TEMPLATE")) {
+            existingEntity.isTemplate = false
+        }
         fillDocuments(existingEntity, assistant.documents)
         val savedEntity = assistantRepository.save(existingEntity)
 

@@ -34,6 +34,8 @@ class ChatEntity {
     @OrderBy("timestamp ASC")
     val chatMessages: MutableList<ChatMessageEntity> = mutableListOf()
 
+    var isTemplate: Boolean = false
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     lateinit var user: UserEntity

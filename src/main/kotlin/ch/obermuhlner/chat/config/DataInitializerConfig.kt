@@ -45,14 +45,19 @@ class DataInitializerConfig(
                 roleRepository.save(RoleEntity().apply{
                     name = "ROLE_USER"
                 })
+                roleRepository.save(RoleEntity().apply{
+                    name = "ROLE_TEMPLATE"
+                })
             }
 
             val adminUser = if (userRepository.findByUsername(adminUsername) == null) {
                 val adminRole = roleRepository.findByName("ROLE_ADMIN")!!
+                val templateRole = roleRepository.findByName("ROLE_TEMPLATE")!!
                 userRepository.save(UserEntity().apply {
                     username = adminUsername
                     password = passwordEncoder.encode(adminPassword)
                     roles.add(adminRole)
+                    roles.add(templateRole)
                 })
             } else {
                 userRepository.findByUsername(adminUsername)!!
@@ -117,6 +122,7 @@ class DataInitializerConfig(
                         Your answers are always concise and to the point.
                     """.trimIndent()
                     sortIndex = 30
+                    isTemplate = true
                     chats.add(chatSoftwareDevelopment)
                     user = adminUser
                 })

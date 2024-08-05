@@ -21,13 +21,13 @@ class UserEntity {
     var openApiKey: String = ""
 
     @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
-    val assistants: List<AssistantEntity> = mutableListOf()
+    val assistants: MutableList<AssistantEntity> = mutableListOf()
 
     @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
-    val chats: List<ChatEntity> = mutableListOf()
+    val chats: MutableList<ChatEntity> = mutableListOf()
 
     @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
-    val documents: List<DocumentEntity> = mutableListOf()
+    val documents: MutableList<DocumentEntity> = mutableListOf()
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
