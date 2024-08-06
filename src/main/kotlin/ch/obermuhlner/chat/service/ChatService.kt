@@ -1,6 +1,7 @@
 package ch.obermuhlner.chat.service
 
 import ch.obermuhlner.chat.entity.ChatEntity
+import ch.obermuhlner.chat.entity.UserEntity
 import ch.obermuhlner.chat.model.Assistant
 import ch.obermuhlner.chat.model.Chat
 import ch.obermuhlner.chat.model.Document
@@ -43,6 +44,11 @@ class ChatService(
     }
 
     @Transactional(readOnly = true)
+    fun findAllTemplates(): List<Chat> {
+        return chatRepository.findAllByIsTemplate(true).map { it.toChat() }
+    }
+
+    @Transactional(readOnly = true)
     fun findById(id: Long): Chat? {
         val userId = authService.getCurrentUserId()
 
@@ -52,10 +58,13 @@ class ChatService(
     @Transactional
     fun create(chat: Chat): Chat {
         val user = authService.getCurrentUserEntity()
+        return create(chat, user)
+    }
 
-        if (chat.id != null) {
-            throw IllegalArgumentException("Cannot create chat with id")
-        }
+    @Transactional
+    fun create(chat: Chat, user: UserEntity): Chat {
+        chat.id = null
+
         val chatEntity = chat.toChatEntity()
         chatEntity.user = user
         if (!authService.isCurrentUserInRole("ROLE_TEMPLATE")) {

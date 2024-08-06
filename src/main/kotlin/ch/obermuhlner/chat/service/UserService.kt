@@ -1,6 +1,7 @@
 package ch.obermuhlner.chat.service
 
 import ch.obermuhlner.chat.entity.UserEntity
+import ch.obermuhlner.chat.model.Assistant
 import ch.obermuhlner.chat.model.User
 import ch.obermuhlner.chat.repository.AssistantRepository
 import ch.obermuhlner.chat.repository.ChatRepository
@@ -8,11 +9,6 @@ import ch.obermuhlner.chat.repository.RoleRepository
 import ch.obermuhlner.chat.repository.UserRepository
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.data.repository.findByIdOrNull
-import org.springframework.security.access.prepost.PreAuthorize
-import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.security.core.userdetails.UserDetails
-import org.springframework.security.core.userdetails.UserDetailsService
-import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -23,8 +19,8 @@ class UserService(
     private val authService: AuthService,
     private val userRepository: UserRepository,
     private val roleRepository: RoleRepository,
-    private val chatRepository: ChatRepository,
-    private val assistantRepository: AssistantRepository,
+    private val chatService: ChatService,
+    private val assistantService: AssistantService,
     private val passwordEncoder: PasswordEncoder
 ) {
 
@@ -53,35 +49,36 @@ class UserService(
         }
         val userEntity = user.toUserEntity(roleRepository = roleRepository)
         userEntity.password = passwordEncoder.encode(user.password)
-
-        val templateChats = chatRepository.findAllByIsTemplate(true)
-        val savedChats = chatRepository.saveAll(templateChats.map {
-            it.toChat().toChatEntity().apply {
-                id = null
-                assistants.clear()
-                documents.clear()
-            }
-        })
-
-        val templateAssistants = assistantRepository.findAllByIsTemplate(true)
-        val savedAssistants = assistantRepository.saveAll(templateAssistants.map {
-            it.toAssistant().toAssistantEntity().apply {
-                id = null
-            }
-        })
-
-        savedChats.forEach {
-            it.user = userEntity
-            userEntity.chats.add(it)
-        }
-        savedAssistants.forEach {
-            it.user = userEntity
-            userEntity.assistants.add(it)
-        }
-
         val savedEntity = userRepository.save(userEntity)
 
+        copyTemplatesToUser(savedEntity)
+
         return savedEntity.toUser()
+    }
+
+    private fun copyTemplatesToUser(userEntity: UserEntity) {
+        val assistantOldIds = mutableMapOf<Long, Assistant>()
+        val assistantTemplates = assistantService.findAllTemplates()
+        assistantTemplates.forEach { assistant ->
+            val savedAssistant = assistantService.create(assistant, userEntity)
+            assistantOldIds[assistant.id!!] = savedAssistant
+        }
+
+        val chatTemplates = chatService.findAllTemplates()
+        chatTemplates.forEach { chat ->
+            val savedAssistants = chat.assistants.mapNotNull { assistant ->
+                if (assistantOldIds.keys.contains(assistant.id)) {
+                    assistantOldIds[assistant.id!!]
+                } else {
+                    val savedAssistant = assistantService.create(assistant, userEntity)
+                    assistantOldIds[assistant.id!!] = savedAssistant
+                    savedAssistant
+                }
+            }
+            chat.assistants.clear()
+            chat.assistants.addAll(savedAssistants)
+            chatService.create(chat, userEntity)
+        }
     }
 
     @Transactional

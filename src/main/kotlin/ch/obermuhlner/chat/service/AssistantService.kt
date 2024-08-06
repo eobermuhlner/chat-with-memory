@@ -1,7 +1,9 @@
 package ch.obermuhlner.chat.service
 
 import ch.obermuhlner.chat.entity.AssistantEntity
+import ch.obermuhlner.chat.entity.UserEntity
 import ch.obermuhlner.chat.model.Assistant
+import ch.obermuhlner.chat.model.Chat
 import ch.obermuhlner.chat.model.Document
 import ch.obermuhlner.chat.repository.AssistantRepository
 import ch.obermuhlner.chat.repository.ChatMessageRepository
@@ -27,6 +29,11 @@ class AssistantService(
     }
 
     @Transactional(readOnly = true)
+    fun findAllTemplates(): List<Assistant> {
+        return assistantRepository.findAllByIsTemplate(true).map { it.toAssistant() }
+    }
+
+    @Transactional(readOnly = true)
     fun findById(id: Long): Assistant? {
         val userId = authService.getCurrentUserId()
         return assistantRepository.findByUserIdAndId(userId, id)?.toAssistant()
@@ -35,9 +42,13 @@ class AssistantService(
     @Transactional
     fun create(assistant: Assistant): Assistant {
         val user = authService.getCurrentUserEntity()
-        if (assistant.id != null) {
-            throw IllegalArgumentException("Cannot create assistant with id")
-        }
+        return create(assistant, user)
+    }
+
+    @Transactional
+    fun create(assistant: Assistant, user: UserEntity): Assistant {
+        assistant.id = null
+
         val assistantEntity = assistant.toAssistantEntity()
         assistantEntity.user = user
         if (!authService.isCurrentUserInRole("ROLE_TEMPLATE")) {
