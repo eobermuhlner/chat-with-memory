@@ -1,6 +1,7 @@
 package ch.obermuhlner.chat.service
 
 import ch.obermuhlner.chat.model.Tool
+import ch.obermuhlner.chat.tools.GitHubFiles
 import ch.obermuhlner.chat.tools.GoogleSearch
 import ch.obermuhlner.chat.tools.News
 import ch.obermuhlner.chat.tools.PublicTransportSwitzerland
@@ -28,6 +29,7 @@ class ToolService(
             Tool.News -> News(newsApiKey)
             Tool.Weather -> Weather()
             Tool.WebPage -> WebPage()
+            Tool.GitHubFiles -> GitHubFiles()
             Tool.PublicTransportSwitzerland -> PublicTransportSwitzerland()
             Tool.GoogleSearch -> GoogleSearch(googleApiKey, googleCseId)
         }

@@ -31,6 +31,7 @@ dependencies {
     implementation("dev.langchain4j:langchain4j-pgvector:0.32.0")
     implementation("dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2:0.32.0")
     implementation("dev.langchain4j:langchain4j-easy-rag:0.32.0")
+    implementation("org.json:json:20211205")
     implementation("org.jsoup:jsoup:1.15.4")
     implementation("org.slf4j:slf4j-api:2.0.13")
     implementation("ch.qos.logback:logback-classic:1.4.7")

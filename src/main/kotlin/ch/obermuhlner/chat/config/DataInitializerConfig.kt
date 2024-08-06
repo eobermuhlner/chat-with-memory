@@ -98,6 +98,11 @@ class DataInitializerConfig(
                         - PostgreSQL
                         - H2
                         
+                        Use the GitHubFiles tool to access the Github repository:
+                        - owner: eobermuhlner
+                        - branch: master
+                        - repository: chat-with-memory
+                        
                         If you have no relevant answer or the answer was already given, respond with $NO_ANSWER.
                     """.trimIndent()
                     user = adminUser
@@ -106,7 +111,7 @@ class DataInitializerConfig(
                 val chatAstronomy = chatRepository.save(ChatEntity().apply {
                     title = CHAT_TITLE_ASTRONOMY
                     prompt = """
-                        This chat is about astronomy and astrophotgraphy.
+                        This chat is about astronomy and astrophotography.
                         
                         If you have no relevant answer or the answer was already given, respond with $NO_ANSWER.
                     """.trimIndent()

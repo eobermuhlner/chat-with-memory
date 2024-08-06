@@ -193,7 +193,7 @@ class ChatMessageService(
 
     private fun summarize(chatEntity: ChatEntity, messagesToSummarize: List<ChatMessageEntity>) {
         val prompt = createSummaryPrompt(messagesToSummarize.joinToString("\n") { it.toChatString() })
-        val summary = aiService.generate(chatEntity.user.openApiKey, prompt)
+        val summary = aiService.generate(prompt, chatEntity.user.openApiKey)
         addSummary(chatEntity, 0, summary)
     }
 
