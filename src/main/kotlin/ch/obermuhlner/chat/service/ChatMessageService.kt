@@ -98,7 +98,7 @@ class ChatMessageService(
             val context = createContext(chat, assistant, userMessage, relevantMessagesText, relevantDocumentSegmentsText)
             val tools = chat.tools.toMutableSet()
             tools.addAll(assistant.tools)
-            val answer = aiService.generateWithTools(context, tools, chat.user.openApiKey)
+            val answer = aiService.generateWithTools(context, tools, chat.user.openaiApiKey, chat.user.githubApiKey)
             if (answer.isNotBlank() && !answer.startsWith(NO_ANSWER)) {
                 val assistantMessage = ChatMessageEntity().apply {
                     this.chat = chat
@@ -193,7 +193,7 @@ class ChatMessageService(
 
     private fun summarize(chatEntity: ChatEntity, messagesToSummarize: List<ChatMessageEntity>) {
         val prompt = createSummaryPrompt(messagesToSummarize.joinToString("\n") { it.toChatString() })
-        val summary = aiService.generate(prompt, chatEntity.user.openApiKey)
+        val summary = aiService.generate(prompt, chatEntity.user.openaiApiKey)
         addSummary(chatEntity, 0, summary)
     }
 
@@ -215,7 +215,7 @@ class ChatMessageService(
             messagesToSummarize.add(longTermSummaryRepository.deleteAndGet(levelSummaries))
         }
         val prompt = createSummaryPrompt(messagesToSummarize.joinToString("\n") { it.text })
-        val summaryText = aiService.generate(prompt, chatEntity.user.openApiKey)
+        val summaryText = aiService.generate(prompt, chatEntity.user.openaiApiKey)
         addSummary(chatEntity, level + 1, summaryText)
     }
 

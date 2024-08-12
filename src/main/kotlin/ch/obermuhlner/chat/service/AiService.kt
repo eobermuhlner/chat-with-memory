@@ -4,7 +4,6 @@ import ch.obermuhlner.chat.model.Tool
 import dev.langchain4j.model.openai.OpenAiChatModel
 import dev.langchain4j.model.openai.OpenAiChatModelName
 import dev.langchain4j.service.AiServices
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -27,11 +26,15 @@ class AiService(
         return model.generate(prompt)
     }
 
-    fun generateWithTools(prompt: String, tools: Collection<Tool>, openAiApiKey: String): String {
-        val toolInstances = toolService.getToolInstances(tools)
+    fun generateWithTools(prompt: String, tools: Collection<Tool>, openaiApiKey: String, githubApiKey: String): String {
+        if (prompt.trim().isBlank()) {
+            return ""
+        }
+
+        val toolInstances = toolService.getToolInstances(tools, githubApiKey)
 
         val aiChat = AiServices.builder(AiChat::class.java)
-            .chatLanguageModel(getModel(openAiApiKey))
+            .chatLanguageModel(getModel(openaiApiKey))
             .tools(toolInstances)
             .build()
 

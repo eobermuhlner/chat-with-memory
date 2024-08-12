@@ -18,7 +18,9 @@ class UserEntity {
     @Column(length = 4000)
     var prompt: String = ""
 
-    var openApiKey: String = ""
+    var openaiApiKey: String = ""
+
+    var githubApiKey: String = ""
 
     @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
     val assistants: MutableList<AssistantEntity> = mutableListOf()

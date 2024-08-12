@@ -42,7 +42,7 @@ class ChatEntity {
 
     @Column(name = "tools")
     @Convert(converter = ToolListConverter::class)
-    var tools: List<Tool> = mutableListOf()
+    var tools: MutableList<Tool> = mutableListOf()
 
     @ManyToMany
     @JoinTable(

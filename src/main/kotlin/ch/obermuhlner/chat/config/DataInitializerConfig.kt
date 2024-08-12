@@ -35,7 +35,8 @@ class DataInitializerConfig(
         passwordEncoder: PasswordEncoder,
         roleRepository: RoleRepository,
         assistantRepository: AssistantRepository,
-        chatRepository: ChatRepository
+        chatRepository: ChatRepository,
+        @Value("\${openai-api-key:}") openaiApiKey: String,
     ): ApplicationRunner {
         return ApplicationRunner {
             if (roleRepository.count() == 0L) {
@@ -58,6 +59,7 @@ class DataInitializerConfig(
                     password = passwordEncoder.encode(adminPassword)
                     roles.add(adminRole)
                     roles.add(templateRole)
+                    this.openaiApiKey = openaiApiKey
                 })
             } else {
                 userRepository.findByUsername(adminUsername)!!
@@ -105,6 +107,7 @@ class DataInitializerConfig(
                         
                         If you have no relevant answer or the answer was already given, respond with $NO_ANSWER.
                     """.trimIndent()
+                    tools.add(Tool.GitHubFiles)
                     user = adminUser
                 })
 
@@ -179,7 +182,7 @@ class DataInitializerConfig(
                     """.trimIndent()
                     sortIndex = 90
                     chats.add(chatSoftwareDevelopment)
-                    user = adminUser
+                    //user = adminUser
                 })
 
                 assistantRepository.save(AssistantEntity().apply {

@@ -20,16 +20,16 @@ class ToolService(
         return Tool.entries.toList()
     }
 
-    fun getToolInstances(tools: Collection<Tool>): List<Any> {
-        return tools.map { getToolInstance(it) }
+    fun getToolInstances(tools: Collection<Tool>, githubApiKey: String): List<Any> {
+        return tools.map { getToolInstance(it, githubApiKey) }
     }
 
-    private fun getToolInstance(tool: Tool): Any {
+    private fun getToolInstance(tool: Tool, githubApiKey: String): Any {
         return when (tool) {
             Tool.News -> News(newsApiKey)
             Tool.Weather -> Weather()
             Tool.WebPage -> WebPage()
-            Tool.GitHubFiles -> GitHubFiles()
+            Tool.GitHubFiles -> GitHubFiles(githubApiKey)
             Tool.PublicTransportSwitzerland -> PublicTransportSwitzerland()
             Tool.GoogleSearch -> GoogleSearch(googleApiKey, googleCseId)
         }

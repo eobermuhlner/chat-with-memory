@@ -70,7 +70,7 @@ fun Chat.toChatEntity(chatEntity: ChatEntity = ChatEntity()): ChatEntity {
             } catch (ex: Exception) {
                 null
             }
-        }
+        }.toMutableList()
         // assistants are mapped in the ChatService
     }
 }
@@ -121,7 +121,8 @@ fun UserEntity.toUser(): User {
         username = this.username,
         password = "",
         prompt = this.prompt,
-        openApiKey = this.openApiKey,
+        openaiApiKey = this.openaiApiKey,
+        githubApiKey = this.githubApiKey,
         roles = this.roles.map { it.name }.toMutableList(),
     )
 }
@@ -134,7 +135,8 @@ fun User.toUserEntity(userEntity: UserEntity = UserEntity(), roleRepository: Rol
             password = this@toUserEntity.password
         }
         prompt = this@toUserEntity.prompt
-        openApiKey = this@toUserEntity.openApiKey
+        openaiApiKey = this@toUserEntity.openaiApiKey
+        githubApiKey = this@toUserEntity.githubApiKey
         roles = this@toUserEntity.roles.mapNotNull { role ->
             roleRepository.findByName(role)
         }.toMutableSet()

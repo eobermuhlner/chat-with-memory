@@ -10,7 +10,6 @@ import dev.langchain4j.model.embedding.EmbeddingModel
 import dev.langchain4j.store.embedding.EmbeddingSearchRequest
 import dev.langchain4j.store.embedding.EmbeddingStore
 import dev.langchain4j.store.embedding.filter.MetadataFilterBuilder
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.ByteArrayInputStream
 
@@ -29,7 +28,7 @@ class DocumentRetrievalService(
         val document = parser.parse(ByteArrayInputStream(documentEntity.data))
         document.metadata().put(METADATA_FILENAME, documentEntity.name)
         document.metadata().put(METADATA_DOCUMENT_ID, documentEntity.id!!)
-        addDocument(document, splitterStrategy, documentEntity.user.openApiKey.ifBlank { "demo" })
+        addDocument(document, splitterStrategy, documentEntity.user.openaiApiKey.ifBlank { "demo" })
     }
 
     private fun addDocument(document: Document, splitterStrategy: SplitterStrategy, openAiApiKey: String) {
